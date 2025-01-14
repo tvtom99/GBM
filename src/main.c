@@ -12,22 +12,19 @@
 
 int main(int argc, char *argv[])
 {
-    // DEBUGGING (while learning C)
-    printf("argc = %d\n", argc);
-
+    //Fail if no path to ROM file is provided
     if (argc < 2)
     {
         printf("Usage: ./<emulator_name> <path_to_rom>\n", argv[0]);
     }
     else
     {
-        printf("argv = %s\n", argv[1]);
-
+        //Just assume the filename given is a ROM and get it loading!
         char* filename = argv[1];
 
         printf("Loading file \"%s\"...\n", filename);
 
-        if (!loadROM(filename))
+        if (loadROM(filename) != 1)
         {
             printf("Failed!\n");
 
