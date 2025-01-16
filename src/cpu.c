@@ -24,7 +24,7 @@
 struct registers registers;
 
 const struct instruction instructions[256] = {
-	{"NOP", 0, undefined},					   // 0x00
+	{"NOP", 0, nop},					   // 0x00
 	{"LD BC, 0x%04X", 2, undefined},		   // 0x01
 	{"LD (BC), A", 0, undefined},			   // 0x02
 	{"INC BC", 0, undefined},				   // 0x03
@@ -450,6 +450,8 @@ void stepCPU()
 		((void (*)(unsigned short))instructions[instruction].execute)(operand);
 		break;
 	}
+
+	printf("Finished CPU cycle!\n\n");
 }
 
 void undefined(void)
@@ -473,3 +475,16 @@ void undefined(void)
 
 	quit();
 }
+
+/*
+	INSTRUCTIONS
+	------
+	ALl instructions that can be executed.
+*/
+
+/*
+	NOP
+	---
+	Does nothing. Skips the cycle.
+*/
+void nop(void){}

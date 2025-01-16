@@ -16,3 +16,4 @@ void reset(void);
 void stepCPU(void);
 
 void undefined(void);   //The function that runs if an opcode isn't defined!
+void nop(void);
