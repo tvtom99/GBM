@@ -330,6 +330,10 @@ void reset(void)
 	registers.bc = 0x0013;
 	registers.de = 0x00D8;
 	registers.hl = 0x014D;
+	
+	//Initialise the stack pointer & program counter.
+	registers.sp = 0xfffe;
+	registers.pc = 0x100;
 
 	/*
 		INITIAL BYTE WRITES:
@@ -400,7 +404,7 @@ void reset(void)
 	writeByte(0xFF4B, 0x00);
 	writeByte(0xFFFF, 0x00);
 
-	printf("Finished reset!"); // DEBUG
+	printf("Finished reset!\n"); // DEBUG
 }
 
 void stepCPU()
@@ -409,7 +413,9 @@ void stepCPU()
 	unsigned short operand = 0;
 
 	// Get instruction & increment pc
+	printf("Program Counter is currently at: %s.\n", registers.pc);
 	instruction = readByte(registers.pc++);
+	printf("Reading instruction %x...\n", instruction);
 
 	// Check if the current instruction is 8 or 16 bits long (length of 1 = 8 bits, 2 = 16 bits)
 	if (instructions[instruction].operandLength == 1)
