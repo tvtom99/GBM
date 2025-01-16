@@ -13,11 +13,13 @@
 		Cinoop emulator.
 */
 
-#include "include/cpu.h"
-#include "include/registers.h"
-#include "include/memory.h"
-#include "include/main.h"
+#include "../include/cpu.h"
+#include "../include/registers.h"
+#include "../include/memory.h"
+#include "../include/main.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 struct registers registers;
 

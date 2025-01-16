@@ -7,6 +7,7 @@
 */
 
 #include "../include/memory.h"
+#include <stdio.h>
 
 // A variable that resets the IO to some necessary value when starting or reseting the system.
 const unsigned char ioReset[0x100] = {
@@ -202,4 +203,10 @@ void writeByte(unsigned short address, unsigned char value)
 
     //Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     printf("ERROR: Attempted to write invalid memory address: %x.", address);
+}
+
+unsigned short readShort(unsigned short address)
+{
+    //Returned short = XXYY, where XX is from the first address, and YY is ffrom the next value along.
+    return readByte(address) | (readByte(address + 1) << 8);
 }

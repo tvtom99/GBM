@@ -18,3 +18,5 @@ extern unsigned char hram[0x80];
 
 unsigned char readByte(unsigned short address);
 void writeByte(unsigned short address, unsigned char value);
+
+unsigned short readShort(unsigned short address);

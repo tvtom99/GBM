@@ -8,9 +8,10 @@
 
 #include "../include/rom.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "../include/cpu.h"
 #include "../include/memory.h"  //can remove this after debug
-#include "include/main.h"
+#include "../include/main.h"
 
 int main(int argc, char *argv[])
 {
