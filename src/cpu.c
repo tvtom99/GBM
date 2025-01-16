@@ -404,7 +404,7 @@ void reset(void)
 	writeByte(0xFF4B, 0x00);
 	writeByte(0xFFFF, 0x00);
 
-	printf("Finished reset!\n"); // DEBUG
+	printf("Finished reset!\n\n"); // DEBUG
 }
 
 void stepCPU()

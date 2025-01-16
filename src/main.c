@@ -35,9 +35,10 @@ int main(int argc, char *argv[])
         }
 
         //Rom has loaded properly, start CPU cycle
+        
+        reset(); //Initialise all values needed to start the system.
         while(1)
         {
-            reset();
             stepCPU();
         }
 
