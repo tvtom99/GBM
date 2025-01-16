@@ -1,7 +1,7 @@
 /*
 	NAME: TMC
 	INIT DATE: 14/01/2024
-	LAST EDIT DATE: 14/01/2024
+	LAST EDIT DATE: 16/01/2024
 	DESC:
 		This file is the main CPU. It will handle CPU ticks, executing opcodes, etc etc.
 
@@ -16,6 +16,7 @@
 #include "include/cpu.h"
 #include "include/registers.h"
 #include "include/memory.h"
+#include "include/main.h"
 #include <stdlib.h>
 
 struct registers registers;
@@ -331,36 +332,36 @@ void reset(void)
 	/*
 		INITIAL BYTE WRITES:
 			[$FF05] = $00 ; TIMA
- 			[$FF06] = $00 ; TMA
- 			[$FF07] = $00 ; TAC
- 			[$FF10] = $80 ; NR10
- 			[$FF11] = $BF ; NR11
- 			[$FF12] = $F3 ; NR12
- 			[$FF14] = $BF ; NR14
- 			[$FF16] = $3F ; NR21
- 			[$FF17] = $00 ; NR22
- 			[$FF19] = $BF ; NR24
- 			[$FF1A] = $7F ; NR30
- 			[$FF1B] = $FF ; NR31
- 			[$FF1C] = $9F ; NR32
- 			[$FF1E] = $BF ; NR33
+			[$FF06] = $00 ; TMA
+			[$FF07] = $00 ; TAC
+			[$FF10] = $80 ; NR10
+			[$FF11] = $BF ; NR11
+			[$FF12] = $F3 ; NR12
+			[$FF14] = $BF ; NR14
+			[$FF16] = $3F ; NR21
+			[$FF17] = $00 ; NR22
+			[$FF19] = $BF ; NR24
+			[$FF1A] = $7F ; NR30
+			[$FF1B] = $FF ; NR31
+			[$FF1C] = $9F ; NR32
+			[$FF1E] = $BF ; NR33
 			[$FF20] = $FF ; NR41
- 			[$FF21] = $00 ; NR42
- 			[$FF22] = $00 ; NR43
- 			[$FF23] = $BF ; NR30
- 			[$FF24] = $77 ; NR50
- 			[$FF25] = $F3 ; NR51
- 			[$FF26] = $F1-GB, $F0-SGB ; NR52
- 			[$FF40] = $91 ; LCDC
- 			[$FF42] = $00 ; SCY
- 			[$FF43] = $00 ; SCX
- 			[$FF45] = $00 ; LYC
- 			[$FF47] = $FC ; BGP
- 			[$FF48] = $FF ; OBP0
- 			[$FF49] = $FF ; OBP1
- 			[$FF4A] = $00 ; WY
- 			[$FF4B] = $00 ; WX
- 			[$FFFF] = $00 ; IE
+			[$FF21] = $00 ; NR42
+			[$FF22] = $00 ; NR43
+			[$FF23] = $BF ; NR30
+			[$FF24] = $77 ; NR50
+			[$FF25] = $F3 ; NR51
+			[$FF26] = $F1-GB, $F0-SGB ; NR52
+			[$FF40] = $91 ; LCDC
+			[$FF42] = $00 ; SCY
+			[$FF43] = $00 ; SCX
+			[$FF45] = $00 ; LYC
+			[$FF47] = $FC ; BGP
+			[$FF48] = $FF ; OBP0
+			[$FF49] = $FF ; OBP1
+			[$FF4A] = $00 ; WY
+			[$FF4B] = $00 ; WX
+			[$FFFF] = $00 ; IE
 
 			This displays the gameboy intro logo
 	*/
@@ -371,31 +372,81 @@ void reset(void)
 	writeByte(0xFF10, 0x80);
 	writeByte(0xFF11, 0xBF);
 	writeByte(0xFF12, 0xF3);
-	writeByte(0xFF14, 0xBF); 
- 	writeByte(0xFF16, 0x3F); 
- 	writeByte(0xFF17, 0x00); 
- 	writeByte(0xFF19, 0xBF); 
- 	writeByte(0xFF1A, 0x7F); 
- 	writeByte(0xFF1B, 0xFF); 
- 	writeByte(0xFF1C, 0x9F); 
- 	writeByte(0xFF1E, 0xBF); 
-	writeByte(0xFF20, 0xFF); 
- 	writeByte(0xFF21, 0x00); 
- 	writeByte(0xFF22, 0x00); 
- 	writeByte(0xFF23, 0xBF); 
- 	writeByte(0xFF24, 0x77); 
- 	writeByte(0xFF25, 0xF3); 
- 	writeByte(0xFF26, 0xF1);
- 	writeByte(0xFF40, 0x91); 
- 	writeByte(0xFF42, 0x00); 
- 	writeByte(0xFF43, 0x00); 
- 	writeByte(0xFF45, 0x00); 
- 	writeByte(0xFF47, 0xFC); 
- 	writeByte(0xFF48, 0xFF); 
- 	writeByte(0xFF49, 0xFF); 
- 	writeByte(0xFF4A, 0x00); 
- 	writeByte(0xFF4B, 0x00); 
- 	writeByte(0xFFFF, 0x00); 
+	writeByte(0xFF14, 0xBF);
+	writeByte(0xFF16, 0x3F);
+	writeByte(0xFF17, 0x00);
+	writeByte(0xFF19, 0xBF);
+	writeByte(0xFF1A, 0x7F);
+	writeByte(0xFF1B, 0xFF);
+	writeByte(0xFF1C, 0x9F);
+	writeByte(0xFF1E, 0xBF);
+	writeByte(0xFF20, 0xFF);
+	writeByte(0xFF21, 0x00);
+	writeByte(0xFF22, 0x00);
+	writeByte(0xFF23, 0xBF);
+	writeByte(0xFF24, 0x77);
+	writeByte(0xFF25, 0xF3);
+	writeByte(0xFF26, 0xF1);
+	writeByte(0xFF40, 0x91);
+	writeByte(0xFF42, 0x00);
+	writeByte(0xFF43, 0x00);
+	writeByte(0xFF45, 0x00);
+	writeByte(0xFF47, 0xFC);
+	writeByte(0xFF48, 0xFF);
+	writeByte(0xFF49, 0xFF);
+	writeByte(0xFF4A, 0x00);
+	writeByte(0xFF4B, 0x00);
+	writeByte(0xFFFF, 0x00);
 
 	printf("Finished reset!"); // DEBUG
+}
+
+void stepCPU()
+{
+	unsigned char instruction;
+	unsigned short operand = 0;
+
+	// Get instruction & increment pc
+	instruction = readByte(registers.pc++);
+
+	// Check if the current instruction is 8 or 16 bits long (length of 1 = 8 bits, 2 = 16 bits)
+	if (instructions[instruction].operandLength == 1)
+	{
+		operand = (unsigned short)readByte(registers.pc);
+	}
+	if (instructions[instruction].operandLength == 2)
+	{
+		operand = readShort(registers.pc);
+	}
+
+	// Increment pc by the length of the opperand length
+	registers.pc += instructions[instruction].operandLength;
+
+	// Select opperation to execute! (taken directly from Cinoop for now.)
+	//It appears each case dereferences a pointer to a function which is stored in the 'instructions' array.
+	switch (instructions[instruction].operandLength)
+	{
+	case 0:
+		((void (*)(void))instructions[instruction].execute)();
+		break;
+
+	case 1:
+		((void (*)(unsigned char))instructions[instruction].execute)((unsigned char)operand);
+		break;
+
+	case 2:
+		((void (*)(unsigned short))instructions[instruction].execute)(operand);
+		break;
+	}
+}
+
+void undefined(void)
+{
+	registers.pc--;
+
+	unsigned char instruction = readByte(registers.pc);
+
+	printf("Undefined instruction 0x%02x!\n\nCheck stdout for more details.", instruction);
+
+	quit();
 }

@@ -11,3 +11,6 @@ struct instruction {
 	unsigned char operandLength;
 	void *execute;
 } extern const instructions[256];
+
+void reset(void);
+void stepCPU(void);
