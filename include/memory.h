@@ -15,3 +15,6 @@ extern unsigned char vram[0x2000];
 extern unsigned char oam[0x100];
 extern unsigned char wram[0x2000];
 extern unsigned char hram[0x80];
+
+unsigned char readByte(unsigned short address);
+void writeByte(unsigned short address, unsigned char value);

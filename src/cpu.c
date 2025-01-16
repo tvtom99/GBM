@@ -300,14 +300,17 @@ const unsigned char instructionTicks[256] = {
 
 void reset(void)
 {
-	//Initialise all memory locations
+	// Initialise all memory locations
 	/*
 		IMPORTANT: RAM on physical GB is not actually initialised to 0 on startup. Instead,
-		it is set to random values. It is expected that the programmer will set it to 
+		it is set to random values. It is expected that the programmer will set it to
 		whatever values are needed when necessary. I will set it to 0 cause it's easier
 		than setting random values throughout it, and I don't think it'll have a negative
 		effect.
 	*/
+
+	printf("Initialising reset..."); // DEBUG
+
 	memset(sram, 0, sizeof(sram));
 	memcpy(io, ioReset, sizeof(io));
 	memset(vram, 0, sizeof(vram));
@@ -315,17 +318,84 @@ void reset(void)
 	memset(wram, 0, sizeof(wram));
 	memset(hram, 0, sizeof(hram));
 
-	//Initialise the registers as per CPU guide
+	// Initialise the registers as per CPU guide
 	registers.pc = 0x100;
 	registers.sp = 0xFFFE;
-	registers.a = 0x01;	//I've split these up to better understand what's happening.
-	registers.f = 0xB0;	//In the guide, it states 'AF set to $01 on GB/SGB', but then 
-						//'F set to 0xB0'? I think this is what it wants done. 
+	registers.a = 0x01; // I've split these up to better understand what's happening.
+	registers.f = 0xB0; // In the guide, it states 'AF set to $01 on GB/SGB', but then
+						//'F set to 0xB0'? I think this is what it wants done.
 	registers.bc = 0x0013;
 	registers.de = 0x00D8;
 	registers.hl = 0x014D;
 
-	
+	/*
+		INITIAL BYTE WRITES:
+			[$FF05] = $00 ; TIMA
+ 			[$FF06] = $00 ; TMA
+ 			[$FF07] = $00 ; TAC
+ 			[$FF10] = $80 ; NR10
+ 			[$FF11] = $BF ; NR11
+ 			[$FF12] = $F3 ; NR12
+ 			[$FF14] = $BF ; NR14
+ 			[$FF16] = $3F ; NR21
+ 			[$FF17] = $00 ; NR22
+ 			[$FF19] = $BF ; NR24
+ 			[$FF1A] = $7F ; NR30
+ 			[$FF1B] = $FF ; NR31
+ 			[$FF1C] = $9F ; NR32
+ 			[$FF1E] = $BF ; NR33
+			[$FF20] = $FF ; NR41
+ 			[$FF21] = $00 ; NR42
+ 			[$FF22] = $00 ; NR43
+ 			[$FF23] = $BF ; NR30
+ 			[$FF24] = $77 ; NR50
+ 			[$FF25] = $F3 ; NR51
+ 			[$FF26] = $F1-GB, $F0-SGB ; NR52
+ 			[$FF40] = $91 ; LCDC
+ 			[$FF42] = $00 ; SCY
+ 			[$FF43] = $00 ; SCX
+ 			[$FF45] = $00 ; LYC
+ 			[$FF47] = $FC ; BGP
+ 			[$FF48] = $FF ; OBP0
+ 			[$FF49] = $FF ; OBP1
+ 			[$FF4A] = $00 ; WY
+ 			[$FF4B] = $00 ; WX
+ 			[$FFFF] = $00 ; IE
 
+			This displays the gameboy intro logo
+	*/
 
+	writeByte(0xFF05, 0x00);
+	writeByte(0xFF06, 0x00);
+	writeByte(0xFF07, 0x00);
+	writeByte(0xFF10, 0x80);
+	writeByte(0xFF11, 0xBF);
+	writeByte(0xFF12, 0xF3);
+	writeByte(0xFF14, 0xBF); 
+ 	writeByte(0xFF16, 0x3F); 
+ 	writeByte(0xFF17, 0x00); 
+ 	writeByte(0xFF19, 0xBF); 
+ 	writeByte(0xFF1A, 0x7F); 
+ 	writeByte(0xFF1B, 0xFF); 
+ 	writeByte(0xFF1C, 0x9F); 
+ 	writeByte(0xFF1E, 0xBF); 
+	writeByte(0xFF20, 0xFF); 
+ 	writeByte(0xFF21, 0x00); 
+ 	writeByte(0xFF22, 0x00); 
+ 	writeByte(0xFF23, 0xBF); 
+ 	writeByte(0xFF24, 0x77); 
+ 	writeByte(0xFF25, 0xF3); 
+ 	writeByte(0xFF26, 0xF1);
+ 	writeByte(0xFF40, 0x91); 
+ 	writeByte(0xFF42, 0x00); 
+ 	writeByte(0xFF43, 0x00); 
+ 	writeByte(0xFF45, 0x00); 
+ 	writeByte(0xFF47, 0xFC); 
+ 	writeByte(0xFF48, 0xFF); 
+ 	writeByte(0xFF49, 0xFF); 
+ 	writeByte(0xFF4A, 0x00); 
+ 	writeByte(0xFF4B, 0x00); 
+ 	writeByte(0xFFFF, 0x00); 
+
+	printf("Finished reset!"); // DEBUG
 }
