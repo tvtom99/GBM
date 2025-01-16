@@ -136,77 +136,86 @@ unsigned char readByte(unsigned short address)
     // {
 
     // }
-    //I'm going to ignore these special cases for now cause they rely on user input (which I don't have).
-    //I want my emulator starting and running up to the first point a user will provide input before I
-    //implement this stuff.
-    if(address >= 0xFF00 && address <= 0xFF79)
+    // I'm going to ignore these special cases for now cause they rely on user input (which I don't have).
+    // I want my emulator starting and running up to the first point a user will provide input before I
+    // implement this stuff.
+    if (address >= 0xFF00 && address <= 0xFF79)
     {
         return io[address - 0xFF00];
     }
 
-    //Address @ HRAM
-    if(address >= 0xFF80 && address <= 0xFFFE)
+    // Address @ HRAM
+    if (address >= 0xFF80 && address <= 0xFFFE)
     {
         return hram[address - 0xFF80];
     }
 
-    //Shouldn't get here! Attempting to read a memory address outside of valid ranges.
-    printf("ERROR: Attempted to read invalid memory address: %x.", address);
+    // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
+    printf("ERROR: Attempted to read invalid memory address: %x.\n", address);
     return 0;
 }
 
 void writeByte(unsigned short address, unsigned char value)
 {
-    //Comments have been abreviated in this function. Please see 'readByte' to understand more of what's happening.
+    // Comments have been abreviated in this function. Please see 'readByte' to understand more of what's happening.
 
     // Address @ VRAM
     if (address >= 0x8000 && address <= 0x9FFF)
     {
-        vram[address - 0x8000] = value; 
+        vram[address - 0x8000] = value;
     }
 
     // Adress @ SRAM
-    if (address >= 0xA000 && address <= 0xBFFF)
+    else if (address >= 0xA000 && address <= 0xBFFF)
     {
-        sram[address - 0xA000] = value; 
+        sram[address - 0xA000] = value;
     }
 
     // Adress @ WRAM
-    if (address >= 0xC000 && address <= 0xDFFF)
+    else if (address >= 0xC000 && address <= 0xDFFF)
     {
-        wram[address - 0xC000] = value; 
+        wram[address - 0xC000] = value;
     }
 
     // Address @ WRAM (echo)
-    if (address >= 0xE000 && address <= 0xFDFF)
+    else if (address >= 0xE000 && address <= 0xFDFF)
     {
         wram[address - 0xE000] = value;
     }
 
     // Address @ OAM
-    if (address >= 0xFE00 && address <= 0xFEFF)
+    else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         oam[address - 0xFE00] = value;
     }
 
     // Address @ IO
-    if(address >= 0xFF00 && address <= 0xFF79)
+    else if (address >= 0xFF00 && address <= 0xFF79)
     {
         io[address - 0xFF00] = value;
     }
 
-    //Address @ HRAM
-    if(address >= 0xFF80 && address <= 0xFFFE)
+    // Address @ HRAM
+    else if (address >= 0xFF80 && address <= 0xFFFE)
     {
         hram[address - 0xFF80] = value;
     }
 
-    //Shouldn't get here! Attempting to read a memory address outside of valid ranges.
-    printf("ERROR: Attempted to write invalid memory address: %x.", address);
+    //DEBUG FOR NOW JUST SO THAT GAME TRIES TO START
+    else if(address == 0xFFFF)
+    {
+        printf("Trying to write to interupts. Not implemented...\n");
+    }
+
+    // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
+    else
+    {
+        printf("ERROR: Attempted to write invalid memory address: %x.\n", address);
+    }
 }
 
 unsigned short readShort(unsigned short address)
 {
-    //Returned short = XXYY, where XX is from the first address, and YY is ffrom the next value along.
+    // Returned short = XXYY, where XX is from the first address, and YY is ffrom the next value along.
     return readByte(address) | (readByte(address + 1) << 8);
 }

@@ -312,7 +312,7 @@ void reset(void)
 		effect.
 	*/
 
-	printf("Initialising reset..."); // DEBUG
+	printf("Initialising reset...\n"); // DEBUG
 
 	memset(sram, 0, sizeof(sram));
 	memcpy(io, ioReset, sizeof(io));

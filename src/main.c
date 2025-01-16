@@ -47,5 +47,6 @@ int main(int argc, char *argv[])
 }
 
 void quit(void) {
+    printf("Quiting emulator...\n");
 	exit(1);
 }
