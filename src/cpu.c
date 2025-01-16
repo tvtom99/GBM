@@ -22,9 +22,10 @@
 #include <string.h>
 
 struct registers registers;
+unsigned char lastOpperand;
 
 const struct instruction instructions[256] = {
-	{"NOP", 0, nop},					   // 0x00
+	{"NOP", 0, nop},						   // 0x00
 	{"LD BC, 0x%04X", 2, undefined},		   // 0x01
 	{"LD (BC), A", 0, undefined},			   // 0x02
 	{"INC BC", 0, undefined},				   // 0x03
@@ -411,21 +412,24 @@ void stepCPU()
 {
 	unsigned char instruction;
 	unsigned short operand = 0;
+	lastOpperand = operand; // DEBUG VALUE used for correctly moving pc back if unknown opcode encountered
 
 	// Get instruction & increment pc
 	printf("Program Counter is currently at: 0x%x.\n", registers.pc);
 	instruction = readByte(registers.pc++);
-	printf("Reading instruction 0x%x...\n", instruction);
+	printf("Reading instruction 0x%02x...\n", instruction);
 
 	// Get the opperand of the function (if any).
-	printf("Checking opperand length...\n");
+	printf("Operand Length of: %u\n", instructions[instruction].operandLength);
 	if (instructions[instruction].operandLength == 1)
 	{
 		operand = (unsigned short)readByte(registers.pc);
+		lastOpperand = operand;
 	}
 	if (instructions[instruction].operandLength == 2)
 	{
 		operand = readShort(registers.pc);
+		lastOpperand = operand;
 	}
 
 	// Increment pc by the length of the opperand length (only occurs if there is an opperand)
@@ -458,6 +462,16 @@ void undefined(void)
 {
 	registers.pc--;
 
+	//Check the last opperand incase need to move back further than just 1
+	if (lastOpperand >= (unsigned char)1)
+	{
+		registers.pc--;
+		if (lastOpperand >= (unsigned char)2)
+		{
+			registers.pc--;
+		}
+	}
+
 	unsigned char instruction = readByte(registers.pc);
 
 	printf("\n===============\nUndefined instruction 0x%02x!\n\nRegisters:\n", instruction);
@@ -471,6 +485,9 @@ void undefined(void)
 	printf("L: 0x%02x\n", registers.l);
 	printf("SP: 0x%04x\n", registers.sp);
 	printf("PC: 0x%04x\n", registers.pc);
+
+	printf("\nOccured at Program Counter of: 0x%x.\n", registers.pc);
+
 	printf("===============\n\n");
 
 	quit();
@@ -487,4 +504,4 @@ void undefined(void)
 	---
 	Does nothing. Skips the cycle.
 */
-void nop(void){}
+void nop(void) {}
