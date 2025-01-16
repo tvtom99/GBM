@@ -15,7 +15,10 @@
 
 #include "include/cpu.h"
 #include "include/registers.h"
+#include "include/memory.h"
 #include <stdlib.h>
+
+struct registers registers;
 
 const struct instruction instructions[256] = {
 	{"NOP", 0, NULL},					  // 0x00
@@ -294,3 +297,35 @@ const unsigned char instructionTicks[256] = {
 	6, 6, 4, 0, 0, 8, 4, 8, 8, 2, 8, 0, 0, 0, 4, 8,	 // 0xe_
 	6, 6, 4, 2, 0, 8, 4, 8, 6, 4, 8, 2, 0, 0, 4, 8	 // 0xf_
 };
+
+void reset(void)
+{
+	//Initialise all memory locations
+	/*
+		IMPORTANT: RAM on physical GB is not actually initialised to 0 on startup. Instead,
+		it is set to random values. It is expected that the programmer will set it to 
+		whatever values are needed when necessary. I will set it to 0 cause it's easier
+		than setting random values throughout it, and I don't think it'll have a negative
+		effect.
+	*/
+	memset(sram, 0, sizeof(sram));
+	memcpy(io, ioReset, sizeof(io));
+	memset(vram, 0, sizeof(vram));
+	memset(oam, 0, sizeof(0));
+	memset(wram, 0, sizeof(wram));
+	memset(hram, 0, sizeof(hram));
+
+	//Initialise the registers as per CPU guide
+	registers.pc = 0x100;
+	registers.sp = 0xFFFE;
+	registers.a = 0x01;	//I've split these up to better understand what's happening.
+	registers.f = 0xB0;	//In the guide, it states 'AF set to $01 on GB/SGB', but then 
+						//'F set to 0xB0'? I think this is what it wants done. 
+	registers.bc = 0x0013;
+	registers.de = 0x00D8;
+	registers.hl = 0x014D;
+
+	
+
+
+}

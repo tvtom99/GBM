@@ -1,0 +1,23 @@
+GB Emulator Notes
+-------------------
+
+
+8 Registers 
+	- 7 real and 1 for flagging some things
+
+Instructions that cause changes on the registers
+
+Instructions are stored in the memory. Each byte corresponds to an instruction (unique).
+
+OPCODE! I remember these. It's what people actually call the instructions that the CPU are completing.
+
+(the list was taken from 'Gameboy Emulator Development - Part 01' on youtube
+Emu Components:
+
+{CART}
+{CPU}
+{ADDRESS BUS}
+{PPU}   <--- Pixel processing unit
+{TIMER}
+
+Example emulator in C is Cinoop

@@ -1,9 +1,10 @@
 #include "../include/rom.h"
+#include "../include/memory.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-//Array of Strings. ROM types pulled from p11 './references/GBCPUman.pdf'
+// Array of Strings. ROM types pulled from p11 './references/GBCPUman.pdf'
 const char *romTypeString[256] = {
     [ROM_PLAIN] = "ROM_PLAIN",
     [ROM_MBC1] = "ROM_MBC1",
@@ -98,10 +99,26 @@ int loadROM(char *fileName)
 
     printf("ROM type: %s\n", romTypeString[type]);
 
-    romSize = header[ROM_OFFSET_ROM_SIZE];
+    //BELOW IS SOME ROM AND RAM SIZE CHEKCING I DONT UNDERSTAND YET! IF THE .rom FILE USED IS 100% 
+    //A PROPER ROM, THESE WILL ALWAYS PASS. WAIT ACTUALLY I THINK THESE ARE NOT NEEDED? 
+    //MORE TESTING TO FOLLOW, MAYBE DELETE THIS?
 
-    ramSize = header[ROM_OFFSET_RAM_SIZE];
-    
+    // romSize = header[ROM_OFFSET_ROM_SIZE];
+    // if ((romSize & 0xF0) == 0x50)
+    //     romSize = (int)pow(2.0, (double)(((0x52) & 0xF) + 1)) + 64;
+    // else
+    //     romSize = (int)pow(2.0, (double)(romSize + 1));
+
+	
+	// if(length != romSize * 16 * 1024) {
+	// 	printf("ROM filesize does not equal ROM size!\n");
+	// }
+
+    // ramSize = header[ROM_OFFSET_RAM_SIZE];
+
+
+    rewind(f);
+    fread(cart, length, 1, f);
 
     fclose(f);
     return 1;

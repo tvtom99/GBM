@@ -9,6 +9,7 @@
 #include "../include/rom.h"
 #include <stdio.h>
 #include "../include/cpu.h"
+#include "../include/memory.h"  //can remove this after debug
 
 int main(int argc, char *argv[])
 {
@@ -30,6 +31,13 @@ int main(int argc, char *argv[])
 
             return 1;
         }
+
+        //Rom has loaded properly, start CPU cycle
+        while(1)
+        {
+
+        }
+
     }
 
     return 0;
