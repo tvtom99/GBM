@@ -8,6 +8,7 @@
 
 #include "../include/memory.h"
 #include <stdio.h>
+#include "../include/registers.h"
 
 // A variable that resets the IO to some necessary value when starting or reseting the system.
 const unsigned char ioReset[0x100] = {
@@ -70,6 +71,7 @@ unsigned char readByte(unsigned short address)
     // Address @ Cart
     if (address <= 0x7FFF)
     {
+        printf("Byte at 0x%.02x read as: 0x%.02x\n", address, cart[address]);
         return cart[address];
     }
 
@@ -216,6 +218,40 @@ void writeByte(unsigned short address, unsigned char value)
 
 unsigned short readShort(unsigned short address)
 {
-    // Returned short = XXYY, where XX is from the first address, and YY is ffrom the next value along.
-    return readByte(address) | (readByte(address + 1) << 8);
+    unsigned short rShort = readByte(address) | (readByte(address + 1) << 8);
+    // Returned short = XXXXXXXX YYYYYYYY, where X the binary representation of the first byte, 
+    // and Y is the binary representation of the second byte.
+    return rShort;
+}
+
+
+/*
+    writeShort
+    ---
+    Writes the given short value into bytes at address & address + 1.
+    The least significant bytes of the short are put into the value at address.
+    The most significant bytes are put into the value at address + 1.
+*/
+void writeShort(unsigned short address, unsigned short value)
+{
+    writeByte(address, (unsigned char) value & 0x00ff);
+    writeByte(address + 1, (unsigned char) value & 0xff00 >> 8); //shifted to the right by 8 bits
+}
+
+
+/*
+    writeShortToStack
+    ---
+    Writes the given value to the stack.
+*/
+void writeShortToStack(unsigned short value)
+{
+    //Move stack back by 2 points (stack counts down from a max value!)
+    registers.sp -= 2;
+
+    //Write the short
+    writeShort(registers.sp, value);
+
+    //DEBUG
+    printf("Stack write 0x%04x\n", value);
 }

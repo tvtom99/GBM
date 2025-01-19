@@ -58,7 +58,7 @@ const struct instruction instructions[256] = {
 	{"LD E, 0x%02X", 1, undefined},			   // 0x1e
 	{"RRA", 0, undefined},					   // 0x1f
 	{"JR NZ, 0x%02X", 1, undefined},		   // 0x20
-	{"LD HL, 0x%04X", 2, undefined},		   // 0x21
+	{"LD HL, 0x%04X", 2, ld_hl_nn},		   // 0x21
 	{"LDI (HL), A", 0, undefined},			   // 0x22
 	{"INC HL", 0, undefined},				   // 0x23
 	{"INC H", 0, undefined},				   // 0x24
@@ -200,7 +200,7 @@ const struct instruction instructions[256] = {
 	{"XOR H", 0, undefined},				   // 0xac
 	{"XOR L", 0, undefined},				   // 0xad
 	{"XOR (HL)", 0, undefined},				   // 0xae
-	{"XOR A", 0, undefined},				   // 0xaf
+	{"XOR A", 0, xor_a},				   // 0xaf
 	{"OR B", 0, undefined},					   // 0xb0
 	{"OR C", 0, undefined},					   // 0xb1
 	{"OR D", 0, undefined},					   // 0xb2
@@ -220,7 +220,7 @@ const struct instruction instructions[256] = {
 	{"RET NZ", 0, undefined},				   // 0xc0
 	{"POP BC", 0, undefined},				   // 0xc1
 	{"JP NZ, 0x%04X", 2, undefined},		   // 0xc2
-	{"JP 0x%04X", 2, undefined},			   // 0xc3
+	{"JP 0x%04X", 2, jp_nn},				   // 0xc3
 	{"CALL NZ, 0x%04X", 2, undefined},		   // 0xc4
 	{"PUSH BC", 0, undefined},				   // 0xc5
 	{"ADD A, 0x%02X", 1, undefined},		   // 0xc6
@@ -248,7 +248,7 @@ const struct instruction instructions[256] = {
 	{"CALL C, 0x%04X", 2, undefined},		   // 0xdc
 	{"UNKNOWN", 0, undefined},				   // 0xdd
 	{"SBC 0x%02X", 1, undefined},			   // 0xde
-	{"RST 0x18", 0, undefined},				   // 0xdf
+	{"RST 0x18", 0, rst_18},				   // 0xdf
 	{"LD (0xFF00 + 0x%02X), A", 1, undefined}, // 0xe0
 	{"POP HL", 0, undefined},				   // 0xe1
 	{"LD (0xFF00 + C), A", 0, undefined},	   // 0xe2
@@ -424,16 +424,19 @@ void stepCPU()
 	if (instructions[instruction].operandLength == 1)
 	{
 		operand = (unsigned short)readByte(registers.pc);
+		printf("Found opperand of: 0x%x\n", operand);
 		lastOpperand = operand;
+		printf("Incrementing pc...\n");
 	}
 	if (instructions[instruction].operandLength == 2)
 	{
 		operand = readShort(registers.pc);
+		printf("Found opperand of: 0x%x\n", operand);
 		lastOpperand = operand;
+		printf("Incrementing pc...\n");
 	}
 
 	// Increment pc by the length of the opperand length (only occurs if there is an opperand)
-	printf("Incrementing pc if opperand found...\n");
 	registers.pc += instructions[instruction].operandLength;
 
 	// Select opperation to execute! (taken directly from Cinoop for now.)
@@ -462,7 +465,7 @@ void undefined(void)
 {
 	registers.pc--;
 
-	//Check the last opperand incase need to move back further than just 1
+	// Check the last opperand incase need to move back further than just 1
 	if (lastOpperand >= (unsigned char)1)
 	{
 		registers.pc--;
@@ -474,7 +477,7 @@ void undefined(void)
 
 	unsigned char instruction = readByte(registers.pc);
 
-	printf("\n===============\nUndefined instruction 0x%02x!\n\nRegisters:\n", instruction);
+	printf("\n===============\nUndefined instruction: 0x%02x!\n\nRegisters:\n", instruction);
 	printf("A: 0x%02x\n", registers.a);
 	printf("F: 0x%02x\n", registers.f);
 	printf("B: 0x%02x\n", registers.b);
@@ -485,23 +488,86 @@ void undefined(void)
 	printf("L: 0x%02x\n", registers.l);
 	printf("SP: 0x%04x\n", registers.sp);
 	printf("PC: 0x%04x\n", registers.pc);
-
-	printf("\nOccured at Program Counter of: 0x%x.\n", registers.pc);
-
 	printf("===============\n\n");
+
+	// Print ROM contents for debug checking (DO NOT LEAVE IN FINAL RELEASE)
+	FILE *debugF = fopen("rom_output.txt", "w");
+	// fprintf(debugF, "%s\n", cart);
+	int j;
+	for (j = 0; j < (int)sizeof cart; j++)
+	{
+		fprintf(debugF, "0x%.02x\n", cart[j]);
+	}
+	fclose(debugF);
 
 	quit();
 }
 
-/*
+/*===========================================
 	INSTRUCTIONS
 	------
-	ALl instructions that can be executed.
-*/
+	All instructions that can be executed.
+============================================*/
 
 /*
-	NOP
+	NOP - 0x00
 	---
 	Does nothing. Skips the cycle.
 */
 void nop(void) {}
+
+/*
+	LD Hl NN - 0x21
+	---
+	Load the value of NN into the register HF
+*/
+void ld_hl_nn(unsigned short value)
+{
+	registers.hl = value;
+}
+
+/*
+	XOR A - 0xAF
+	---
+	Calculates the result of an exclusive-or between the contents of register A
+	and register A, storing the results back into register A.
+
+	This should always result in clearing the contents of register A.
+*/
+void xor_a(void)
+{
+	//Do an exclusive or between register A and itself.
+	registers.a ^= registers.a;
+
+	//Because this always results in a 0, set the zero flag in the flag register
+	FLAGS_SET(FLAGS_ZERO);
+
+	//Incase these are still set, clear them too
+	FLAGS_CLEAR(FLAGS_CARRY | FLAGS_NEGATIVE | FLAGS_HALFCARRY);
+}
+
+/*
+	JP NN - 0xC3
+	---
+	Jumps to the point in code specified by the opperand.
+*/
+void jp_nn(unsigned short operand)
+{
+	printf("Jumping to 0x%.4x\n", operand);
+	registers.pc = operand;
+}
+
+/*
+	RST 18 - 0xDF
+	---
+	Restart / implied call function.
+
+	Unconditional function call to the absolute fixed address defined by the opcode (0x0018).
+	Will store the current PC on the stack before setting the PC to 0x0018.
+	This is so that it can be returned to later if neccesary.
+*/
+void rst_18(void)
+{
+	writeShortToStack(registers.pc);
+	registers.pc = 0x0018;
+}
