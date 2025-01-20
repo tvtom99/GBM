@@ -49,3 +49,4 @@ void ld_b_n(unsigned char value);
 void ldd_hlp_a(void);
 void dec_b(void);
 void jr_nz_n(unsigned char value);
+void dec_c(void);

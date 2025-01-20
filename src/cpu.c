@@ -30,7 +30,7 @@ const struct instruction instructions[256] = {
 	{"LD (BC), A", 0, undefined},			   // 0x02
 	{"INC BC", 0, undefined},				   // 0x03
 	{"INC B", 0, undefined},				   // 0x04
-	{"DEC B", 0, dec_b},				   // 0x05
+	{"DEC B", 0, dec_b},					   // 0x05
 	{"LD B, 0x%02X", 1, ld_b_n},			   // 0x06
 	{"RLCA", 0, undefined},					   // 0x07
 	{"LD (0x%04X), SP", 2, undefined},		   // 0x08
@@ -38,7 +38,7 @@ const struct instruction instructions[256] = {
 	{"LD A, (BC)", 0, undefined},			   // 0x0a
 	{"DEC BC", 0, undefined},				   // 0x0b
 	{"INC C", 0, undefined},				   // 0x0c
-	{"DEC C", 0, undefined},				   // 0x0d
+	{"DEC C", 0, dec_c},					   // 0x0d
 	{"LD C, 0x%02X", 1, ld_c_n},			   // 0x0e
 	{"RRCA", 0, undefined},					   // 0x0f
 	{"STOP", 1, undefined},					   // 0x10
@@ -57,7 +57,7 @@ const struct instruction instructions[256] = {
 	{"DEC E", 0, undefined},				   // 0x1d
 	{"LD E, 0x%02X", 1, undefined},			   // 0x1e
 	{"RRA", 0, undefined},					   // 0x1f
-	{"JR NZ, 0x%02X", 1, jr_nz_n},		   // 0x20
+	{"JR NZ, 0x%02X", 1, jr_nz_n},			   // 0x20
 	{"LD HL, 0x%04X", 2, ld_hl_nn},			   // 0x21
 	{"LDI (HL), A", 0, undefined},			   // 0x22
 	{"INC HL", 0, undefined},				   // 0x23
@@ -459,6 +459,14 @@ void stepCPU()
 	}
 
 	printf("Finished CPU cycle!\n\n");
+
+	//VERY DEBUG, MUST DELETE AFTER THIS BREAKPOINT IS REACHED. Cinoop did this so I wanna track when I hit it too >:)
+	if (registers.pc == 0x2817)
+	{
+		printf("You've hit the point where vram starts to be accessed :O Stopping emulation so you can celebrate!");
+		quit();
+	}
+}
 }
 
 void undefined(void)
@@ -520,18 +528,18 @@ void nop(void) {}
 void dec_b(void)
 {
 	// Set half carry flag if subtraction will cause rollover.
-	if((registers.b & 0x0f) == 0x00)
+	if ((registers.b & 0x0f) == 0x00)
 	{
 		FLAGS_SET(FLAGS_HALFCARRY);
 	}
-	else	// Clear it just incase.
+	else // Clear it just incase.
 	{
 		FLAGS_CLEAR(FLAGS_HALFCARRY);
 	}
 
 	registers.b--;
 
-	if(registers.b == 0)
+	if (registers.b == 0)
 	{
 		FLAGS_SET(FLAGS_ZERO);
 	}
@@ -554,6 +562,42 @@ void ld_b_n(unsigned char value)
 }
 
 /*
+	DEC C - 0x0D
+	---
+	Decrement the value held in register C.
+
+	Must set flags:
+		- Subtract
+		- Zero (if applicable)
+		- Half Carry (if applicable)
+*/
+void dec_c(void)
+{
+	// Set half carry flag if subtraction will cause rollover.
+	if ((registers.c & 0x0f) == 0x00)
+	{
+		FLAGS_SET(FLAGS_HALFCARRY);
+	}
+	else // Clear it just incase.
+	{
+		FLAGS_CLEAR(FLAGS_HALFCARRY);
+	}
+
+	registers.c--;
+
+	if (registers.c == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	FLAGS_SET(FLAGS_NEGATIVE);
+}
+
+/*
 	LD C N - 0x0E
 	---
 	Load value of N into register C.
@@ -571,10 +615,10 @@ void ld_c_n(unsigned char value)
 */
 void jr_nz_n(unsigned char value)
 {
-	if(!FLAGS_ISZERO)
+	if (!FLAGS_ISZERO)
 	{
-		registers.pc += (signed char) value;	// Jump based on a signed char, as a jump can be both
-												// forward or backwards.
+		registers.pc += (signed char)value; // Jump based on a signed char, as a jump can be both
+											// forward or backwards.
 	}
 }
 
@@ -600,16 +644,15 @@ void ldd_hlp_a(void)
 	registers.hl--;
 }
 
-	/*
-		XOR A - 0xAF
-		---
-		Calculates the result of an exclusive-or between the contents of register A
-		and register A, storing the results back into register A.
+/*
+	XOR A - 0xAF
+	---
+	Calculates the result of an exclusive-or between the contents of register A
+	and register A, storing the results back into register A.
 
-		This should always result in clearing the contents of register A.
-	*/
-	void
-	xor_a(void)
+	This should always result in clearing the contents of register A.
+*/
+void xor_a(void)
 {
 	// Do an exclusive or between register A and itself.
 	registers.a ^= registers.a;
