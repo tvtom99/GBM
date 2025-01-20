@@ -71,7 +71,6 @@ unsigned char readByte(unsigned short address)
     // Address @ Cart
     if (address <= 0x7FFF)
     {
-        printf("Byte at 0x%.02x read as: 0x%.02x\n", address, cart[address]);
         return cart[address];
     }
 

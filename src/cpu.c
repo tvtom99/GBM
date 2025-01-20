@@ -22,7 +22,7 @@
 #include <string.h>
 
 struct registers registers;
-unsigned char lastOpperand;
+unsigned int lastOpperand;
 
 const struct instruction instructions[256] = {
 	{"NOP", 0, nop},						   // 0x00
@@ -30,8 +30,8 @@ const struct instruction instructions[256] = {
 	{"LD (BC), A", 0, undefined},			   // 0x02
 	{"INC BC", 0, undefined},				   // 0x03
 	{"INC B", 0, undefined},				   // 0x04
-	{"DEC B", 0, undefined},				   // 0x05
-	{"LD B, 0x%02X", 1, undefined},			   // 0x06
+	{"DEC B", 0, dec_b},				   // 0x05
+	{"LD B, 0x%02X", 1, ld_b_n},			   // 0x06
 	{"RLCA", 0, undefined},					   // 0x07
 	{"LD (0x%04X), SP", 2, undefined},		   // 0x08
 	{"ADD HL, BC", 0, undefined},			   // 0x09
@@ -39,7 +39,7 @@ const struct instruction instructions[256] = {
 	{"DEC BC", 0, undefined},				   // 0x0b
 	{"INC C", 0, undefined},				   // 0x0c
 	{"DEC C", 0, undefined},				   // 0x0d
-	{"LD C, 0x%02X", 1, undefined},			   // 0x0e
+	{"LD C, 0x%02X", 1, ld_c_n},			   // 0x0e
 	{"RRCA", 0, undefined},					   // 0x0f
 	{"STOP", 1, undefined},					   // 0x10
 	{"LD DE, 0x%04X", 2, undefined},		   // 0x11
@@ -57,8 +57,8 @@ const struct instruction instructions[256] = {
 	{"DEC E", 0, undefined},				   // 0x1d
 	{"LD E, 0x%02X", 1, undefined},			   // 0x1e
 	{"RRA", 0, undefined},					   // 0x1f
-	{"JR NZ, 0x%02X", 1, undefined},		   // 0x20
-	{"LD HL, 0x%04X", 2, ld_hl_nn},		   // 0x21
+	{"JR NZ, 0x%02X", 1, jr_nz_n},		   // 0x20
+	{"LD HL, 0x%04X", 2, ld_hl_nn},			   // 0x21
 	{"LDI (HL), A", 0, undefined},			   // 0x22
 	{"INC HL", 0, undefined},				   // 0x23
 	{"INC H", 0, undefined},				   // 0x24
@@ -75,7 +75,7 @@ const struct instruction instructions[256] = {
 	{"CPL", 0, undefined},					   // 0x2f
 	{"JR NC, 0x%02X", 1, undefined},		   // 0x30
 	{"LD SP, 0x%04X", 2, undefined},		   // 0x31
-	{"LDD (HL), A", 0, undefined},			   // 0x32
+	{"LDD (HL), A", 0, ldd_hlp_a},			   // 0x32
 	{"INC SP", 0, undefined},				   // 0x33
 	{"INC (HL)", 0, undefined},				   // 0x34
 	{"DEC (HL)", 0, undefined},				   // 0x35
@@ -200,7 +200,7 @@ const struct instruction instructions[256] = {
 	{"XOR H", 0, undefined},				   // 0xac
 	{"XOR L", 0, undefined},				   // 0xad
 	{"XOR (HL)", 0, undefined},				   // 0xae
-	{"XOR A", 0, xor_a},				   // 0xaf
+	{"XOR A", 0, xor_a},					   // 0xaf
 	{"OR B", 0, undefined},					   // 0xb0
 	{"OR C", 0, undefined},					   // 0xb1
 	{"OR D", 0, undefined},					   // 0xb2
@@ -412,7 +412,7 @@ void stepCPU()
 {
 	unsigned char instruction;
 	unsigned short operand = 0;
-	lastOpperand = operand; // DEBUG VALUE used for correctly moving pc back if unknown opcode encountered
+	lastOpperand = 0; // DEBUG VALUE used for correctly moving pc back if unknown opcode encountered
 
 	// Get instruction & increment pc
 	printf("Program Counter is currently at: 0x%x.\n", registers.pc);
@@ -425,14 +425,14 @@ void stepCPU()
 	{
 		operand = (unsigned short)readByte(registers.pc);
 		printf("Found opperand of: 0x%x\n", operand);
-		lastOpperand = operand;
+		lastOpperand = 1;
 		printf("Incrementing pc...\n");
 	}
 	if (instructions[instruction].operandLength == 2)
 	{
 		operand = readShort(registers.pc);
 		printf("Found opperand of: 0x%x\n", operand);
-		lastOpperand = operand;
+		lastOpperand = 2;
 		printf("Incrementing pc...\n");
 	}
 
@@ -441,7 +441,7 @@ void stepCPU()
 
 	// Select opperation to execute! (taken directly from Cinoop for now.)
 	// It appears each case dereferences a pointer to a function which is stored in the 'instructions' array.
-	printf("Executing instruction 0x%x!\n", instruction);
+	printf("Executing instruction 0x%.02x!\n", instruction);
 
 	switch (instructions[instruction].operandLength)
 	{
@@ -463,17 +463,8 @@ void stepCPU()
 
 void undefined(void)
 {
-	registers.pc--;
-
-	// Check the last opperand incase need to move back further than just 1
-	if (lastOpperand >= (unsigned char)1)
-	{
-		registers.pc--;
-		if (lastOpperand >= (unsigned char)2)
-		{
-			registers.pc--;
-		}
-	}
+	registers.pc -= lastOpperand + 1; // decrement pc by 1 + however long the last opperand was
+									  // cause it would have increment the pc too
 
 	unsigned char instruction = readByte(registers.pc);
 
@@ -491,14 +482,14 @@ void undefined(void)
 	printf("===============\n\n");
 
 	// Print ROM contents for debug checking (DO NOT LEAVE IN FINAL RELEASE)
-	FILE *debugF = fopen("rom_output.txt", "w");
-	// fprintf(debugF, "%s\n", cart);
-	int j;
-	for (j = 0; j < (int)sizeof cart; j++)
-	{
-		fprintf(debugF, "0x%.02x\n", cart[j]);
-	}
-	fclose(debugF);
+	// FILE *debugF = fopen("rom_output.txt", "w");
+	// // fprintf(debugF, "%s\n", cart);
+	// int j;
+	// for (j = 0; j < (int)sizeof cart; j++)
+	// {
+	// 	fprintf(debugF, "0x%.02x\n", cart[j]);
+	// }
+	// fclose(debugF);
 
 	quit();
 }
@@ -517,6 +508,77 @@ void undefined(void)
 void nop(void) {}
 
 /*
+	DEC B - 0x05
+	---
+	Decrement the value held in register B.
+
+	Must set flags:
+		- Subtract
+		- Zero (if applicable)
+		- Half Carry (if applicable)
+*/
+void dec_b(void)
+{
+	// Set half carry flag if subtraction will cause rollover.
+	if((registers.b & 0x0f) == 0x00)
+	{
+		FLAGS_SET(FLAGS_HALFCARRY);
+	}
+	else	// Clear it just incase.
+	{
+		FLAGS_CLEAR(FLAGS_HALFCARRY);
+	}
+
+	registers.b--;
+
+	if(registers.b == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	FLAGS_SET(FLAGS_NEGATIVE);
+}
+
+/*
+	LD B N - 0x06
+	---
+	Load value of N into register B.
+*/
+void ld_b_n(unsigned char value)
+{
+	registers.b = value;
+}
+
+/*
+	LD C N - 0x0E
+	---
+	Load value of N into register C.
+*/
+void ld_c_n(unsigned char value)
+{
+	registers.c = value;
+}
+
+/*
+	JR NZ N - 0x20
+	---
+	If ZERO FLAG is not set, add N to current PC.
+	Effectively, jump forward by N if ZERO FLAG is set.
+*/
+void jr_nz_n(unsigned char value)
+{
+	if(!FLAGS_ISZERO)
+	{
+		registers.pc += (signed char) value;	// Jump based on a signed char, as a jump can be both
+												// forward or backwards.
+	}
+}
+
+/*
 	LD Hl NN - 0x21
 	---
 	Load the value of NN into the register HF
@@ -527,22 +589,35 @@ void ld_hl_nn(unsigned short value)
 }
 
 /*
-	XOR A - 0xAF
+	LDD HL- A - 0x32
 	---
-	Calculates the result of an exclusive-or between the contents of register A
-	and register A, storing the results back into register A.
-
-	This should always result in clearing the contents of register A.
+	Load data from the 8-bit A register to the absolute address specified by the 16-bit register HL.
+	The value of HL is decremented after the memory write.
 */
-void xor_a(void)
+void ldd_hlp_a(void)
 {
-	//Do an exclusive or between register A and itself.
+	writeByte(registers.hl, registers.a);
+	registers.hl--;
+}
+
+	/*
+		XOR A - 0xAF
+		---
+		Calculates the result of an exclusive-or between the contents of register A
+		and register A, storing the results back into register A.
+
+		This should always result in clearing the contents of register A.
+	*/
+	void
+	xor_a(void)
+{
+	// Do an exclusive or between register A and itself.
 	registers.a ^= registers.a;
 
-	//Because this always results in a 0, set the zero flag in the flag register
+	// Because this always results in a 0, set the zero flag in the flag register
 	FLAGS_SET(FLAGS_ZERO);
 
-	//Incase these are still set, clear them too
+	// Incase these are still set, clear them too
 	FLAGS_CLEAR(FLAGS_CARRY | FLAGS_NEGATIVE | FLAGS_HALFCARRY);
 }
 

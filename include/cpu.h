@@ -38,8 +38,14 @@ void reset(void);
 void stepCPU(void);
 
 void undefined(void);   //The function that runs if an opcode isn't defined!
+
 void nop(void);
 void jp_nn(unsigned short operand);
 void xor_a(void);
 void ld_hl_nn(unsigned short value);
 void rst_18(void);
+void ld_c_n(unsigned char value);
+void ld_b_n(unsigned char value);
+void ldd_hlp_a(void);
+void dec_b(void);
+void jr_nz_n(unsigned char value);
