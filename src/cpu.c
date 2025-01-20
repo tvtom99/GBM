@@ -468,7 +468,7 @@ void undefined(void)
 
 	unsigned char instruction = readByte(registers.pc);
 
-	printf("\n===============\nUndefined instruction: 0x%02x!\n\nRegisters:\n", instruction);
+	printf("\n===============\nUndefined instruction: 0x%02x!\nInstruction information: %s\n\nRegisters:\n", instruction, instructions[instruction].disassembly);
 	printf("A: 0x%02x\n", registers.a);
 	printf("F: 0x%02x\n", registers.f);
 	printf("B: 0x%02x\n", registers.b);
