@@ -1,5 +1,6 @@
 #include "../include/rom.h"
 #include "../include/memory.h"
+#include "../include/main.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -72,20 +73,20 @@ int loadROM(char *fileName)
     fread(header, 0x180, 1, f);
 
     // Init all values in the name array to '\0', NULL.
-    memset(name, '\0', 17);
+    memset(gameName, '\0', 17);
 
     // Loop through header and pull the name out of it.
     for (i = 0; i < 16; i++)
     {
         // If the value equals to 0x80 or 0xc0, set to null.
         if (header[i + ROM_OFFSET_NAME] == 0x80 || header[i + ROM_OFFSET_NAME] == 0xc0)
-            name[i] = '\0';
+            gameName[i] = '\0';
         // Otherwise, set to the value in the memory.
         else
-            name[i] = header[i + ROM_OFFSET_NAME];
+            gameName[i] = header[i + ROM_OFFSET_NAME];
     }
 
-    printf("ROM name: %s\n", name);
+    printf("ROM name: %s\n", gameName);
 
     type = header[ROM_OFFSET_TYPE];
 

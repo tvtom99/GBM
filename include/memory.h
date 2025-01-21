@@ -6,6 +6,8 @@
         Describe the memory structures in the console
 */
 
+#pragma once
+
 extern const unsigned char ioReset[0x100];
 
 extern unsigned char cart[0x8000];

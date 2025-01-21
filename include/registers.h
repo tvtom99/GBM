@@ -18,6 +18,8 @@
     This code was initially copied from the open-source emulator Cinoop (https://cturt.github.io/cinoop.html).
 */
 
+#pragma once
+
 struct registers {
 	struct {
 		union {

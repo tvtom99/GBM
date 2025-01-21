@@ -6,6 +6,7 @@
         Header for the rom file. Contains information on how ROM files for GameBoy are constructed.
 */
 
+#pragma once
 
 //Offests into memory that define certain parts of the game.
 #define ROM_OFFSET_NAME 0x134   //What the ROM says is its name.
