@@ -9,6 +9,7 @@
 #include "../include/memory.h"
 #include <stdio.h>
 #include "../include/registers.h"
+#include "../include/main.h"
 
 // A variable that resets the IO to some necessary value when starting or reseting the system.
 const unsigned char ioReset[0x100] = {
@@ -158,6 +159,14 @@ unsigned char readByte(unsigned short address)
 
 void writeByte(unsigned short address, unsigned char value)
 {
+    //CINOOP TETRIS PATCH so I can get past the copyright screen maybe?
+    if(address == 0xff80){
+        printf("TETRIS PATCH");
+        quit();
+        return;
+    } 
+
+
     // Comments have been abreviated in this function. Please see 'readByte' to understand more of what's happening.
 
     // Address @ VRAM

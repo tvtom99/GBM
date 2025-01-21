@@ -57,3 +57,6 @@ roms/
 *.gb
 *.gbc
 /roms
+
+#Debug files
+rom_output.txt

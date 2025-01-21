@@ -17,6 +17,7 @@
 #include "../include/registers.h"
 #include "../include/memory.h"
 #include "../include/main.h"
+#include "../include/debug.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -460,13 +461,12 @@ void stepCPU()
 
 	printf("Finished CPU cycle!\n\n");
 
-	//VERY DEBUG, MUST DELETE AFTER THIS BREAKPOINT IS REACHED. Cinoop did this so I wanna track when I hit it too >:)
+	// VERY DEBUG, MUST DELETE AFTER THIS BREAKPOINT IS REACHED. Cinoop did this so I wanna track when I hit it too >:)
 	if (registers.pc == 0x2817)
 	{
 		printf("You've hit the point where vram starts to be accessed :O Stopping emulation so you can celebrate!");
 		quit();
 	}
-}
 }
 
 void undefined(void)
@@ -527,6 +527,8 @@ void nop(void) {}
 */
 void dec_b(void)
 {
+	printRegisters();
+
 	// Set half carry flag if subtraction will cause rollover.
 	if ((registers.b & 0x0f) == 0x00)
 	{
@@ -541,10 +543,14 @@ void dec_b(void)
 
 	if (registers.b == 0)
 	{
+		printf("Zero flag has been set!\n");
+		printf("B: 0x%02x\n", registers.b);
 		FLAGS_SET(FLAGS_ZERO);
 	}
 	else
 	{
+		printf("Clearing zero flag.\n");
+		printf("B: 0x%02x\n", registers.b);
 		FLAGS_CLEAR(FLAGS_ZERO);
 	}
 
