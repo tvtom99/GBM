@@ -52,8 +52,11 @@ int loadROM(char *fileName)
 
     // Open ROM file
     f = fopen(fileName, "rb");
-    if (!f)
+    if (f == NULL)
+    {
+        printf("ROM FILE NULL");
         return 0;
+    }
 
     // SIZE CHECK
     printf("Checking ROM size...\n");
@@ -100,9 +103,9 @@ int loadROM(char *fileName)
 
     printf("ROM type: %s\n", romTypeString[type]);
 
-    //BELOW IS SOME ROM AND RAM SIZE CHEKCING I DONT UNDERSTAND YET! IF THE .rom FILE USED IS 100% 
-    //A PROPER ROM, THESE WILL ALWAYS PASS. WAIT ACTUALLY I THINK THESE ARE NOT NEEDED? 
-    //MORE TESTING TO FOLLOW, MAYBE DELETE THIS?
+    // BELOW IS SOME ROM AND RAM SIZE CHEKCING I DONT UNDERSTAND YET! IF THE .rom FILE USED IS 100%
+    // A PROPER ROM, THESE WILL ALWAYS PASS. WAIT ACTUALLY I THINK THESE ARE NOT NEEDED?
+    // MORE TESTING TO FOLLOW, MAYBE DELETE THIS?
 
     // romSize = header[ROM_OFFSET_ROM_SIZE];
     // if ((romSize & 0xF0) == 0x50)
@@ -110,17 +113,21 @@ int loadROM(char *fileName)
     // else
     //     romSize = (int)pow(2.0, (double)(romSize + 1));
 
-	
-	// if(length != romSize * 16 * 1024) {
-	// 	printf("ROM filesize does not equal ROM size!\n");
-	// }
+    // if(length != romSize * 16 * 1024) {
+    // 	printf("ROM filesize does not equal ROM size!\n");
+    // }
 
     // ramSize = header[ROM_OFFSET_RAM_SIZE];
 
-
     rewind(f);
     fread(cart, length, 1, f);
+    printf("First byte of ROM: %02x\n", cart[0]);
 
-    fclose(f);
+
+    if (f != NULL)
+    {
+        fclose(f);
+    }
+    // fclose(f);
     return 1;
 }
