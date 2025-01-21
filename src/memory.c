@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include "../include/registers.h"
 #include "../include/main.h"
+#include "../include/keys.h"
+#include "../include/interupts.h"
 
 // A variable that resets the IO to some necessary value when starting or reseting the system.
 const unsigned char ioReset[0x100] = {
@@ -30,7 +32,7 @@ const unsigned char ioReset[0x100] = {
     0xD0, 0x7A, 0x00, 0x9E, 0x04, 0x5F, 0x41, 0x2F, 0x1D, 0x77, 0x36, 0x75, 0x81, 0xAA, 0x70, 0x3A,
     0x98, 0xD1, 0x71, 0x02, 0x4D, 0x01, 0xC1, 0xFF, 0x0D, 0x00, 0xD3, 0x05, 0xF9, 0x00, 0x0B, 0x00};
 
-unsigned char *cart; // The cart variable holds the information loaded in from the 'loadROM' method in rom.c
+unsigned char *cart;        // The cart variable holds the information loaded in from the 'loadROM' method in rom.c
 unsigned char sram[0x2000]; // Switchable RAM
 unsigned char io[0x100];    // Input - Output
 unsigned char vram[0x2000]; // Video RAM
@@ -131,19 +133,59 @@ unsigned char readByte(unsigned short address)
 
     /*
         Name - P1
-        Contents - Register for reading joy pad info
-                   and determining system type. (R/W)
-    */
-    // if (address == 0xFF00)
-    // {
+        Contents - Register for reading joy pad info.
+        Bit represents 0b00000000
+        Bits number ... 7654 3210;
+            7 & 6 - no effect
+            5 - Select buttons (if flagged, 0, 1, 2, 3 represent a, b, select, start )
+            4 - Select dpad (if flagged, 0, 1, 2, 3 represent right, left, up, down )
+            3 - start / down
+            2 - select / up
+            1 - b / left
+            0 - a / right
 
-    // }
-    // I'm going to ignore these special cases for now cause they rely on user input (which I don't have).
-    // I want my emulator starting and running up to the first point a user will provide input before I
-    // implement this stuff.
-    if (address >= 0xFF00 && address <= 0xFF79)
+        Bits are considered active when set to 0, NOT 1!
+
+    */
+    if (address == 0xFF00)
     {
-        return io[address - 0xFF00];
+        // Check if button interupt is flagged
+        if (!(io[0x00] & 0x20))
+        {
+            // return 1100 0000 | KEYS.KEYS1 | 0010 0000 = 1110 XXXX where X = KEYS.KEYS2 bits
+            return (unsigned char)(0xc0 | keys.keys1 | 0x10);
+        }
+        // Check if dpad input flagged
+        else if (!(io[0x00] & 0x10))
+        {
+            return (unsigned char)(0xc0 | keys.keys2 | 0x20);
+        }
+        // 0x30 = 0011 0000, i.e. if neither dpad and action button flags are set
+        else if (!(io[0x00] & 0x30))
+        {
+            return 0xff; // If neither bits are set, return 1111 1111
+        }
+        else
+        {
+            return 0; // just incase?
+        }
+    }
+
+    /*
+        Address @ Interrupt Flags
+    */
+    if (address == 0xff0f)
+    {
+        return interrupt.flags;
+    }
+
+    /*
+        Address @ Interrupt Enable
+    */
+    if (address == 0xffff)
+    {
+
+        return interrupt.enable;
     }
 
     // Address @ HRAM
@@ -159,13 +201,13 @@ unsigned char readByte(unsigned short address)
 
 void writeByte(unsigned short address, unsigned char value)
 {
-    //CINOOP TETRIS PATCH so I can get past the copyright screen maybe?
-    if(address == 0xff80){
+    // CINOOP TETRIS PATCH so I can get past the copyright screen maybe?
+    if (address == 0xff80)
+    {
         printf("TETRIS PATCH");
         quit();
         return;
-    } 
-
+    }
 
     // Comments have been abreviated in this function. Please see 'readByte' to understand more of what's happening.
 
@@ -211,8 +253,8 @@ void writeByte(unsigned short address, unsigned char value)
         hram[address - 0xFF80] = value;
     }
 
-    //DEBUG FOR NOW JUST SO THAT GAME TRIES TO START
-    else if(address == 0xFFFF)
+    // DEBUG FOR NOW JUST SO THAT GAME TRIES TO START
+    else if (address == 0xFFFF)
     {
         printf("Trying to write to interupts. Not implemented...\n");
     }
@@ -227,11 +269,10 @@ void writeByte(unsigned short address, unsigned char value)
 unsigned short readShort(unsigned short address)
 {
     unsigned short rShort = readByte(address) | (readByte(address + 1) << 8);
-    // Returned short = XXXXXXXX YYYYYYYY, where X the binary representation of the first byte, 
+    // Returned short = XXXXXXXX YYYYYYYY, where X the binary representation of the first byte,
     // and Y is the binary representation of the second byte.
     return rShort;
 }
-
 
 /*
     writeShort
@@ -242,10 +283,9 @@ unsigned short readShort(unsigned short address)
 */
 void writeShort(unsigned short address, unsigned short value)
 {
-    writeByte(address, (unsigned char) value & 0x00ff);
-    writeByte(address + 1, (unsigned char) value & 0xff00 >> 8); //shifted to the right by 8 bits
+    writeByte(address, (unsigned char)value & 0x00ff);
+    writeByte(address + 1, (unsigned char)value & 0xff00 >> 8); // shifted to the right by 8 bits
 }
-
 
 /*
     writeShortToStack
@@ -254,12 +294,12 @@ void writeShort(unsigned short address, unsigned short value)
 */
 void writeShortToStack(unsigned short value)
 {
-    //Move stack back by 2 points (stack counts down from a max value!)
+    // Move stack back by 2 points (stack counts down from a max value!)
     registers.sp -= 2;
 
-    //Write the short
+    // Write the short
     writeShort(registers.sp, value);
 
-    //DEBUG
+    // DEBUG
     printf("Stack write 0x%04x\n", value);
 }
