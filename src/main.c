@@ -65,6 +65,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         strcpy(title, "GBM - "); // Copy "GBM - " to title
         strcat(title, gameName); // Append gameName to title
 
+        //The window itself! Size defined by constants and scaling factor.
         SDL_Window *window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_HEIGHT * SCALING_FACTOR, SCREEN_WIDTH * SCALING_FACTOR, SDL_WINDOW_SHOWN);
 
         SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
