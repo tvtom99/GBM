@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 
 // Array of Strings. ROM types pulled from p11 './references/GBCPUman.pdf'
 const char *romTypeString[256] = {
@@ -120,6 +121,8 @@ int loadROM(char *fileName)
     // ramSize = header[ROM_OFFSET_RAM_SIZE];
 
     rewind(f);
+
+    cart = malloc(length);    
     fread(cart, length, 1, f);
     printf("First byte of ROM: %02x\n", cart[0]);
 
@@ -130,4 +133,9 @@ int loadROM(char *fileName)
     }
     // fclose(f);
     return 1;
+}
+
+void unloadROM(void)
+{
+    free(cart);
 }

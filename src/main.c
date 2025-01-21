@@ -98,5 +98,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 void quit(void)
 {
     printf("Quiting emulator...\n");
+    unloadROM();
     exit(1);
 }

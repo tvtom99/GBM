@@ -34,6 +34,8 @@ struct instruction {
 	void *execute;
 } extern const instructions[256];
 
+unsigned short ticks;
+
 void reset(void);
 void stepCPU(void);
 
