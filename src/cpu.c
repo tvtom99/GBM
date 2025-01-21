@@ -441,20 +441,22 @@ void stepCPU()
 	registers.pc += instructions[instruction].operandLength;
 
 	// Select opperation to execute! (taken directly from Cinoop for now.)
-	// It appears each case dereferences a pointer to a function which is stored in the 'instructions' array.
-	printf("Executing instruction 0x%.02x!\n", instruction);
+	// Each case dereferences a pointer to a function which is stored in the 'instructions' array.
 
 	switch (instructions[instruction].operandLength)
 	{
 	case 0:
+		printf("Executing 0x%.02x, '%s'.\n", instruction, instructions[instruction].disassembly);
 		((void (*)(void))instructions[instruction].execute)();
 		break;
 
 	case 1:
+		printf("Executing 0x%.02x, '%s'. Opperand is: 0x%02x.\n", instruction, instructions[instruction].disassembly, operand);
 		((void (*)(unsigned char))instructions[instruction].execute)((unsigned char)operand);
 		break;
 
 	case 2:
+		printf("Executing 0x%.02x, '%s'. Opperand is: 0x%02x.\n", instruction, instructions[instruction].disassembly, operand);
 		((void (*)(unsigned short))instructions[instruction].execute)(operand);
 		break;
 	}

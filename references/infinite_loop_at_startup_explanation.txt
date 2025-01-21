@@ -1,0 +1,5 @@
+If you haven't done button inputs yet, make sure that register reads 0xff instead of 0x00. 
+0 indicates the button is pressed, and there is a hard reset programmed into the game if 
+you press A, B, START, and SELECT at the same time.
+
+https://www.reddit.com/r/EmuDev/comments/lkbqv7/writing_a_gameboy_emulator_stuck_before_tetris/
