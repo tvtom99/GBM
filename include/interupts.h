@@ -15,3 +15,7 @@ struct interrupt
 } extern interrupt;
 
 void vblank(void);
+void STATInterrupt(void);
+void timer(void);
+void serial(void);
+void joypad(void);
