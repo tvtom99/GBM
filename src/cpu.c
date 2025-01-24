@@ -286,6 +286,7 @@ const struct instruction instructions[256] = {
 	{"RST 0x38", 0, undefined},				   // 0xff
 };
 
+//This is a database of how many ticks each instruction should take.
 const unsigned char instructionTicks[256] = {
 	2, 6, 4, 4, 2, 2, 4, 4, 10, 4, 4, 4, 2, 2, 4, 4, // 0x0_
 	2, 6, 4, 4, 2, 2, 4, 4, 4, 4, 4, 4, 2, 2, 4, 4,	 // 0x1_
@@ -304,6 +305,9 @@ const unsigned char instructionTicks[256] = {
 	6, 6, 4, 0, 0, 8, 4, 8, 8, 2, 8, 0, 0, 0, 4, 8,	 // 0xe_
 	6, 6, 4, 2, 0, 8, 4, 8, 6, 4, 8, 2, 0, 0, 4, 8	 // 0xf_
 };
+
+unsigned long ticks;
+unsigned char stopped;
 
 void reset(void)
 {
@@ -477,6 +481,9 @@ void stepCPU()
 		((void (*)(unsigned short))instructions[instruction].execute)(operand);
 		break;
 	}
+
+	//Add the total amount of ticks this instruction would have taken to the total ticks
+	ticks += instructionTicks[instruction];
 
 	printf("Finished CPU cycle!\n\n");
 
@@ -675,6 +682,11 @@ void jr_nz_n(unsigned char value)
 	{
 		registers.pc += (signed char)value; // Jump based on a signed char, as a jump can be both
 											// forward or backwards.
+		ticks += 12;
+	}
+	else
+	{
+		ticks += 8;
 	}
 }
 
