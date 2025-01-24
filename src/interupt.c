@@ -1,17 +1,27 @@
 
+#include <stdio.h>
 #include "../include/interupts.h"
 #include "../include/display.h"
 #include "../include/registers.h"
 #include "../include/memory.h"
 
+//for debug include keys.h
+#include "../include/keys.h"
+
 struct interrupt interrupt;
 
 void interruptStep(void)
 {
+    printf("Running interupt step!\n");
+
+    printf("interrupt master: 0x%.02x\ninterrupt enable: 0x%.02x\ninterrupt flags: 0x%.02x\n",interrupt.master, interrupt.enable, interrupt.flags);
+    printf("Keys currently: 0x%.04x\n", keys.c);
+
     // If the master & enable flags are set, and any spcific interupts are on...
     if (interrupt.master && interrupt.enable && interrupt.flags)
     {
         // Find and execute the correct interrupt.
+        printf("Running an interupt!");
 
         //'activate' will have a positive bit for whichever flags are BOTH set AND enabled during this step
         unsigned char activate = (interrupt.enable & interrupt.flags);
@@ -25,6 +35,7 @@ void interruptStep(void)
         // If VLBANK is set AND it has been allowed...
         if (activate & INTERRUPTS_VBLANK)
         {
+            printf("Running VBLANK interrupt.");
             interrupt.flags = (interrupt.flags & ~INTERRUPTS_VBLANK); // switch off the flag...
             vblank();
         }
@@ -32,6 +43,7 @@ void interruptStep(void)
         // If STAT is set AND it has been allowed...    0x48
         if (activate & INTERRUPTS_LCDSTAT)
         {
+            printf("Running LCDSTAT interrupt.");
             interrupt.flags = (interrupt.flags & ~INTERRUPTS_LCDSTAT);
             STATInterrupt();
         }
@@ -39,6 +51,7 @@ void interruptStep(void)
         // If TIMER is set AND it has been allowed...   0x50
         if (activate & INTERRUPTS_TIMER)
         {
+            printf("Running TIMER interrupt.");
             interrupt.flags = (interrupt.flags & ~INTERRUPTS_TIMER);
             timer();
         }
@@ -46,6 +59,7 @@ void interruptStep(void)
         // If SERIAL is set AND it has been allowed...  0x58
         if (activate & INTERRUPTS_SERIAL)
         {
+            printf("Running SERIAL interrupt.");
             interrupt.flags = (interrupt.flags & ~INTERRUPTS_SERIAL);
             serial();
         }
@@ -53,11 +67,10 @@ void interruptStep(void)
         // If JOYPAD is set AND it has been allowed...  0x60
         if (activate & INTERRUPTS_JOYPAD)
         {
+            printf("Running JOYPAD interrupt.");
             interrupt.flags = (interrupt.flags & ~INTERRUPTS_JOYPAD);
             joypad();
         }
-
-        //TO-DO: Other interrupts...
     }
 }
 
@@ -68,6 +81,8 @@ void interruptStep(void)
 */
 void vblank(void)
 {
+    printf("vblank interrupt running\n");
+
     // Draw the frame for this section
     drawFrame();
 
@@ -97,6 +112,8 @@ void vblank(void)
 */
 void STATInterrupt(void)
 {
+    printf("STAT interrupt running\n");
+
     //Reset master interupt flag
     interrupt.master = 0;
     
@@ -113,6 +130,8 @@ void STATInterrupt(void)
 */
 void timer(void)
 {
+    printf("timer interrupt running\n");
+
     //Reset master interupt flag
     interrupt.master = 0;
     
@@ -129,6 +148,8 @@ void timer(void)
 */
 void serial(void)
 {
+    printf("serial interrupt running\n");
+
     //Reset master interupt flag
     interrupt.master = 0;
     
@@ -145,6 +166,8 @@ void serial(void)
 */
 void joypad(void)
 {
+    printf("joypad interrupt running\n");
+
     //Reset master interupt flag
     interrupt.master = 0;
     

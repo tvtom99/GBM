@@ -34,7 +34,7 @@ struct instruction {
 	void *execute;
 } extern const instructions[256];
 
-unsigned short ticks;
+// unsigned short ticks;
 
 void reset(void);
 void stepCPU(void);
@@ -52,3 +52,9 @@ void ldd_hlp_a(void);
 void dec_b(void);
 void jr_nz_n(unsigned char value);
 void dec_c(void);
+void di(void);
+void ld_b_a(void);
+void ld_de_nn(unsigned short value);
+void ldi_a_hlp(void);
+void ld_bc_nn(unsigned short value);
+void ld_bcp_a(void);

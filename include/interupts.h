@@ -14,6 +14,8 @@ struct interrupt
     unsigned char flags;
 } extern interrupt;
 
+
+void interruptStep(void);
 void vblank(void);
 void STATInterrupt(void);
 void timer(void);

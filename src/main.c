@@ -14,6 +14,7 @@
 #include "../include/cpu.h"
 #include "../include/memory.h" //can remove this after debug
 #include "../include/main.h"
+#include "../include/interupts.h"
 
 char gameName[17];
 
@@ -76,6 +77,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         while (!quit)
         {
             stepCPU();
+            interruptStep();
             while (SDL_PollEvent(&e))
             {
                 if (e.type == SDL_QUIT)

@@ -18,6 +18,8 @@
 #include "../include/memory.h"
 #include "../include/main.h"
 #include "../include/debug.h"
+#include "../include/interupts.h"
+#include "../include/keys.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,8 +29,8 @@ unsigned int lastOpperand;
 
 const struct instruction instructions[256] = {
 	{"NOP", 0, nop},						   // 0x00
-	{"LD BC, 0x%04X", 2, undefined},		   // 0x01
-	{"LD (BC), A", 0, undefined},			   // 0x02
+	{"LD BC, 0x%04X", 2, ld_bc_nn},			   // 0x01
+	{"LD (BC), A", 0, ld_bcp_a},			   // 0x02
 	{"INC BC", 0, undefined},				   // 0x03
 	{"INC B", 0, undefined},				   // 0x04
 	{"DEC B", 0, dec_b},					   // 0x05
@@ -43,7 +45,7 @@ const struct instruction instructions[256] = {
 	{"LD C, 0x%02X", 1, ld_c_n},			   // 0x0e
 	{"RRCA", 0, undefined},					   // 0x0f
 	{"STOP", 1, undefined},					   // 0x10
-	{"LD DE, 0x%04X", 2, undefined},		   // 0x11
+	{"LD DE, 0x%04X", 2, ld_de_nn},			   // 0x11
 	{"LD (DE), A", 0, undefined},			   // 0x12
 	{"INC DE", 0, undefined},				   // 0x13
 	{"INC D", 0, undefined},				   // 0x14
@@ -68,7 +70,7 @@ const struct instruction instructions[256] = {
 	{"DAA", 0, undefined},					   // 0x27
 	{"JR Z, 0x%02X", 1, undefined},			   // 0x28
 	{"ADD HL, HL", 0, undefined},			   // 0x29
-	{"LDI A, (HL)", 0, undefined},			   // 0x2a
+	{"LDI A, (HL)", 0, ldi_a_hlp},			   // 0x2a
 	{"DEC HL", 0, undefined},				   // 0x2b
 	{"INC L", 0, undefined},				   // 0x2c
 	{"DEC L", 0, undefined},				   // 0x2d
@@ -97,7 +99,7 @@ const struct instruction instructions[256] = {
 	{"LD B, H", 0, undefined},				   // 0x44
 	{"LD B, L", 0, undefined},				   // 0x45
 	{"LD B, (HL)", 0, undefined},			   // 0x46
-	{"LD B, A", 0, undefined},				   // 0x47
+	{"LD B, A", 0, ld_b_a},					   // 0x47
 	{"LD C, B", 0, undefined},				   // 0x48
 	{"LD C, C", 0, undefined},				   // 0x49
 	{"LD C, D", 0, undefined},				   // 0x4a
@@ -269,7 +271,7 @@ const struct instruction instructions[256] = {
 	{"LD A, (0xFF00 + 0x%02X)", 1, undefined}, // 0xf0
 	{"POP AF", 0, undefined},				   // 0xf1
 	{"LD A, (0xFF00 + C)", 0, undefined},	   // 0xf2
-	{"DI", 0, undefined},					   // 0xf3
+	{"DI", 0, di},							   // 0xf3
 	{"UNKNOWN", 0, undefined},				   // 0xf4
 	{"PUSH AF", 0, undefined},				   // 0xf5
 	{"OR 0x%02X", 1, undefined},			   // 0xf6
@@ -336,6 +338,21 @@ void reset(void)
 	// Initialise the stack pointer & program counter.
 	registers.sp = 0xfffe;
 	registers.pc = 0x100;
+
+	//Initialise the interrupts
+	interrupt.master = 1;
+	interrupt.enable = 0;
+	interrupt.flags = 0;
+
+	//Initialise the keys
+	keys.a = 1;
+	keys.b = 1;
+	keys.select = 1;
+	keys.start = 1;
+	keys.right = 1;
+	keys.left = 1;
+	keys.up = 1;
+	keys.down = 1;
 
 	/*
 		INITIAL BYTE WRITES:
@@ -518,6 +535,27 @@ void undefined(void)
 void nop(void) {}
 
 /*
+	LD BC NN - 0x01
+	---
+	Load into the 16-bit value BC the 16-bit value of NN.
+*/
+void ld_bc_nn(unsigned short value)
+{
+	registers.bc = value;
+}
+
+/*
+	LD BCP A - 0x02
+	---
+	Load into the address specified by the 16-bit register BC, the value stored at the 8-bit register
+	A.
+*/
+void ld_bcp_a(void)
+{
+	writeByte(registers.bc, registers.a);
+}
+
+/*
 	DEC B - 0x05
 	---
 	Decrement the value held in register B.
@@ -616,6 +654,16 @@ void ld_c_n(unsigned char value)
 }
 
 /*
+	LD DE NN - 0x11
+	---
+	Load into the 16-bit register DE the value of NN.
+*/
+void ld_de_nn(unsigned short value)
+{
+	registers.de = value;
+}
+
+/*
 	JR NZ N - 0x20
 	---
 	If ZERO FLAG is not set, add N to current PC.
@@ -641,6 +689,19 @@ void ld_hl_nn(unsigned short value)
 }
 
 /*
+	LDI A (HL + ) - 0x2a
+	---
+	Load into the 8-bit register A, the value at the memory location specified by the value in the
+	16-bit register HL.
+	HL is incremeneted by 1 after this memory lead.
+*/
+void ldi_a_hlp(void)
+{
+	registers.a = readByte(registers.hl);
+	registers.hl++;
+}
+
+/*
 	LDD HL- A - 0x32
 	---
 	Load data from the 8-bit A register to the absolute address specified by the 16-bit register HL.
@@ -650,6 +711,16 @@ void ldd_hlp_a(void)
 {
 	writeByte(registers.hl, registers.a);
 	registers.hl--;
+}
+
+/*
+	LD B A - 0x47
+	---
+	Load the data from the 8-bit register A into the 8-bit register B.
+*/
+void ld_b_a(void)
+{
+	registers.b = registers.a;
 }
 
 /*
@@ -696,4 +767,14 @@ void rst_18(void)
 {
 	writeShortToStack(registers.pc);
 	registers.pc = 0x0018;
+}
+
+/*
+	DI - 0xF3
+	---
+	Disable master interrupt flag.
+*/
+void di(void)
+{
+	interrupt.master = 0;
 }

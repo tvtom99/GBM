@@ -12,6 +12,7 @@
 #include "../include/main.h"
 #include "../include/keys.h"
 #include "../include/interupts.h"
+#include <stdlib.h>
 
 // A variable that resets the IO to some necessary value when starting or reseting the system.
 const unsigned char ioReset[0x100] = {
@@ -153,7 +154,7 @@ unsigned char readByte(unsigned short address)
         if (!(io[0x00] & 0x20))
         {
             // return 1100 0000 | KEYS.KEYS1 | 0010 0000 = 1110 XXXX where X = KEYS.KEYS2 bits
-            return (unsigned char)(0xc0 | keys.keys1 | 0x10);
+            return (unsigned char)(0xC0 | keys.keys1 | 0x10);
         }
         // Check if dpad input flagged
         else if (!(io[0x00] & 0x10))
@@ -163,7 +164,7 @@ unsigned char readByte(unsigned short address)
         // 0x30 = 0011 0000, i.e. if neither dpad and action button flags are set
         else if (!(io[0x00] & 0x30))
         {
-            return 0xff; // If neither bits are set, return 1111 1111
+            return 0xFF; // If neither bits are set, return 1111 1111
         }
         else
         {
@@ -174,7 +175,7 @@ unsigned char readByte(unsigned short address)
     /*
         Address @ Interrupt Flags
     */
-    if (address == 0xff0f)
+    if (address == 0xFF0F)
     {
         return interrupt.flags;
     }
@@ -182,7 +183,7 @@ unsigned char readByte(unsigned short address)
     /*
         Address @ Interrupt Enable
     */
-    if (address == 0xffff)
+    if (address == 0xFFFF)
     {
 
         return interrupt.enable;
@@ -194,6 +195,10 @@ unsigned char readByte(unsigned short address)
         return hram[address - 0xFF80];
     }
 
+    // TAKEN FROM CINOOP CAUSE DIV TIMER IS VERY INVOLVED TO EMULATE PROPERLY
+    // Should return a div timer, but a random number works just as well for Tetris
+	if(address == 0xff04) return (unsigned char)rand();
+
     // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     printf("ERROR: Attempted to read invalid memory address: %x.\n", address);
     return 0;
@@ -202,7 +207,7 @@ unsigned char readByte(unsigned short address)
 void writeByte(unsigned short address, unsigned char value)
 {
     // CINOOP TETRIS PATCH so I can get past the copyright screen maybe?
-    if (address == 0xff80)
+    if (address == 0xFF80)
     {
         printf("TETRIS PATCH");
         quit();
@@ -242,7 +247,7 @@ void writeByte(unsigned short address, unsigned char value)
     }
 
     // Address @ IO
-    else if (address >= 0xFF00 && address <= 0xFF79)
+    else if (address >= 0xFF00 && address <= 0xFF7F)
     {
         io[address - 0xFF00] = value;
     }
@@ -253,16 +258,23 @@ void writeByte(unsigned short address, unsigned char value)
         hram[address - 0xFF80] = value;
     }
 
-    // DEBUG FOR NOW JUST SO THAT GAME TRIES TO START
+    // Address @ Interrupt Flags
+    else if (address == 0xFF0F)
+    {
+        interrupt.flags = value;
+    }
+
+    // Address @ Interrupt Enable 
     else if (address == 0xFFFF)
     {
-        printf("Trying to write to interupts. Not implemented...\n");
+        interrupt.enable = value;
     }
 
     // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     else
     {
         printf("ERROR: Attempted to write invalid memory address: %x.\n", address);
+        quit();
     }
 }
 
@@ -302,4 +314,23 @@ void writeShortToStack(unsigned short value)
 
     // DEBUG
     printf("Stack write 0x%04x\n", value);
+}
+
+/*
+    readShortFromStack
+    ---
+    reads the given value to the stack.
+*/
+unsigned short readShortFromStack(void)
+{
+    // read the short
+    unsigned short value = readShort(registers.sp);
+
+    // Move stack back by 2 points (stack counts down from a max value!)
+    registers.sp += 2;
+
+    // DEBUG
+    printf("Stack read 0x%04x\n", value);
+
+    return value;
 }

@@ -1,1 +1,1 @@
-gcc .\src\cpu.c .\src\debug.c .\src\display.c .\src\main.c .\src\memory.c .\src\rom.c -g -o emu_out -IC:/msys64/mingw64/include/SDL2 -LC:/msys64/mingw64/lib -lSDL2main -lSDL2
+gcc .\src\cpu.c .\src\debug.c .\src\display.c .\src\main.c .\src\memory.c .\src\rom.c .\src\keys.c .\src\interupt.c -g -o emu_out -IC:/msys64/mingw64/include/SDL2 -LC:/msys64/mingw64/lib -lSDL2main -lSDL2 -fms-extensions

@@ -23,3 +23,4 @@ void writeByte(unsigned short address, unsigned char value);
 
 unsigned short readShort(unsigned short address);
 void writeShortToStack(unsigned short value);
+unsigned short readShortFromStack(void);
