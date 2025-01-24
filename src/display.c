@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 
 
-void drawFrame(void)
+void drawFramebuffer(void)
 {
     printf("drawFrame called but is not implemented.\n");
 }

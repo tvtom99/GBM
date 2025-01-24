@@ -4,8 +4,9 @@
 #include "../include/display.h"
 #include "../include/registers.h"
 #include "../include/memory.h"
+#include "../include/cpu.h"
 
-//for debug include keys.h
+// for debug include keys.h
 #include "../include/keys.h"
 
 struct interrupt interrupt;
@@ -14,7 +15,7 @@ void interruptStep(void)
 {
     printf("Running interupt step!\n");
 
-    printf("interrupt master: 0x%.02x\ninterrupt enable: 0x%.02x\ninterrupt flags: 0x%.02x\n",interrupt.master, interrupt.enable, interrupt.flags);
+    printf("interrupt master: 0x%.02x\ninterrupt enable: 0x%.02x\ninterrupt flags: 0x%.02x\n", interrupt.master, interrupt.enable, interrupt.flags);
     printf("Keys currently: 0x%.04x\n", keys.c);
 
     // If the master & enable flags are set, and any spcific interupts are on...
@@ -28,7 +29,7 @@ void interruptStep(void)
 
         /*
             T H E   O R D E R   O F   T H E   I N T E R R U P T S   I N   T H E   ' I F '
-            S T A T E M E N T   R E F L E C T S   T H E I R   R E L A T I V E   
+            S T A T E M E N T   R E F L E C T S   T H E I R   R E L A T I V E
             P R I O R I T I E S   W H E N   B E I N G   E X E C U T E D
         */
 
@@ -55,7 +56,7 @@ void interruptStep(void)
             interrupt.flags = (interrupt.flags & ~INTERRUPTS_TIMER);
             timer();
         }
-        
+
         // If SERIAL is set AND it has been allowed...  0x58
         if (activate & INTERRUPTS_SERIAL)
         {
@@ -84,7 +85,7 @@ void vblank(void)
     printf("vblank interrupt running\n");
 
     // Draw the frame for this section
-    drawFrame();
+    drawFramebuffer();
 
     // Reset the master interupt flag
     interrupt.master = 0;
@@ -101,7 +102,8 @@ void vblank(void)
     writeShortToStack(registers.pc);
     registers.pc = 0x40;
 
-    // Increment the ticks this would take (I haven't implemented this yet...)
+    // Increment the ticks this would take
+    ticks += 12;
 }
 
 /*
@@ -114,12 +116,15 @@ void STATInterrupt(void)
 {
     printf("STAT interrupt running\n");
 
-    //Reset master interupt flag
+    // Reset master interupt flag
     interrupt.master = 0;
-    
-    //Save pc to stack and jump to execute from location 0x48
+
+    // Save pc to stack and jump to execute from location 0x48
     writeShortToStack(registers.pc);
     registers.pc = 0x48;
+
+    // Increment the ticks this would take
+    ticks += 12;
 }
 
 /*
@@ -132,12 +137,15 @@ void timer(void)
 {
     printf("timer interrupt running\n");
 
-    //Reset master interupt flag
+    // Reset master interupt flag
     interrupt.master = 0;
-    
-    //Save pc to stack and jump to execute from location 0x48
+
+    // Save pc to stack and jump to execute from location 0x48
     writeShortToStack(registers.pc);
     registers.pc = 0x50;
+
+    // Increment the ticks this would take
+    ticks += 12;
 }
 
 /*
@@ -150,12 +158,15 @@ void serial(void)
 {
     printf("serial interrupt running\n");
 
-    //Reset master interupt flag
+    // Reset master interupt flag
     interrupt.master = 0;
-    
-    //Save pc to stack and jump to execute from location 0x58
+
+    // Save pc to stack and jump to execute from location 0x58
     writeShortToStack(registers.pc);
     registers.pc = 0x58;
+
+    // Increment the ticks this would take
+    ticks += 12;
 }
 
 /*
@@ -168,12 +179,15 @@ void joypad(void)
 {
     printf("joypad interrupt running\n");
 
-    //Reset master interupt flag
+    // Reset master interupt flag
     interrupt.master = 0;
-    
-    //Save pc to stack and jump to execute from location 0x60
+
+    // Save pc to stack and jump to execute from location 0x60
     writeShortToStack(registers.pc);
     registers.pc = 0x60;
+
+    // Increment the ticks this would take
+    ticks += 12;
 }
 
 /*
@@ -182,7 +196,8 @@ void joypad(void)
     This is taken directly from Cinoop, but it is effectively the simplest way to write;
     "enable interrupts again then jump back to whatever value as at the top of the stack"
 */
-void returnFromInterrupt(void) {
-	interrupt.master = 1;
-	registers.pc = readShortFromStack();
+void returnFromInterrupt(void)
+{
+    interrupt.master = 1;
+    registers.pc = readShortFromStack();
 }

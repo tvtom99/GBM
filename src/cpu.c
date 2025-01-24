@@ -20,6 +20,7 @@
 #include "../include/debug.h"
 #include "../include/interupts.h"
 #include "../include/keys.h"
+#include "../include/gpu.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -286,7 +287,7 @@ const struct instruction instructions[256] = {
 	{"RST 0x38", 0, undefined},				   // 0xff
 };
 
-//This is a database of how many ticks each instruction should take.
+// This is a database of how many ticks each instruction should take.
 const unsigned char instructionTicks[256] = {
 	2, 6, 4, 4, 2, 2, 4, 4, 10, 4, 4, 4, 2, 2, 4, 4, // 0x0_
 	2, 6, 4, 4, 2, 2, 4, 4, 4, 4, 4, 4, 2, 2, 4, 4,	 // 0x1_
@@ -343,12 +344,12 @@ void reset(void)
 	registers.sp = 0xfffe;
 	registers.pc = 0x100;
 
-	//Initialise the interrupts
+	// Initialise the interrupts
 	interrupt.master = 1;
 	interrupt.enable = 0;
 	interrupt.flags = 0;
 
-	//Initialise the keys
+	// Initialise the keys
 	keys.a = 1;
 	keys.b = 1;
 	keys.select = 1;
@@ -358,7 +359,14 @@ void reset(void)
 	keys.up = 1;
 	keys.down = 1;
 
-	//Initialise ticks and stopped variable
+	// Initialise the GPU
+	gpu.control = 0;
+	gpu.scrollX = 0;
+	gpu.scrollY = 0;
+	gpu.scanline = 0;
+	gpu.tick = 0;
+
+	// Initialise ticks and stopped variable
 	ticks = 0;
 	stopped = 0;
 
@@ -486,7 +494,7 @@ void stepCPU()
 		break;
 	}
 
-	//Add the total amount of ticks this instruction would have taken to the total ticks
+	// Add the total amount of ticks this instruction would have taken to the total ticks
 	ticks += instructionTicks[instruction];
 
 	printf("Finished CPU cycle!\n\n");
@@ -496,6 +504,14 @@ void stepCPU()
 	{
 		printf("You've hit the point where vram starts to be accessed :O Stopping emulation so you can celebrate!");
 		quit();
+	}
+
+	// Debug stuff
+	if (debugModeEnable)
+	{
+		//Show pop-up of current execution
+
+		showRealtimeData();
 	}
 }
 

@@ -15,8 +15,10 @@
 #include "../include/memory.h" //can remove this after debug
 #include "../include/main.h"
 #include "../include/interupts.h"
+#include "../include/gpu.h"
 
 char gameName[17];
+unsigned char debugModeEnable = 1;
 
 // int WinMain(int argc, char *argv[])
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -77,6 +79,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         while (!quit)
         {
             stepCPU();
+            stepGPU();
             interruptStep();
             while (SDL_PollEvent(&e))
             {
