@@ -358,6 +358,10 @@ void reset(void)
 	keys.up = 1;
 	keys.down = 1;
 
+	//Initialise ticks and stopped variable
+	ticks = 0;
+	stopped = 0;
+
 	/*
 		INITIAL BYTE WRITES:
 			[$FF05] = $00 ; TIMA
