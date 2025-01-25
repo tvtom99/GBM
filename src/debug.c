@@ -67,6 +67,7 @@ void showRealtimeData(void)
 	debugMessageP += sprintf(debugMessageP, "IF: 0x%02x\n", interrupt.flags);
 
 	debugMessageP += sprintf(debugMessageP, "\nKEYS: 0x%02x\n", keys.c);
+	debugMessageP += sprintf(debugMessageP, "\nKEYS MEM: 0x%02x\n", readByte(0xFF00));
 
 
 	debugMessageP += sprintf(debugMessageP, "\nContinue debugging?\n");

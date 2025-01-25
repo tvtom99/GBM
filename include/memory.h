@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <stddef.h>
+
 extern const unsigned char ioReset[0x100];
 
 extern unsigned char *cart;
@@ -24,3 +26,4 @@ void writeByte(unsigned short address, unsigned char value);
 unsigned short readShort(unsigned short address);
 void writeShortToStack(unsigned short value);
 unsigned short readShortFromStack(void);
+void copy(unsigned short destination, unsigned short source, size_t length);

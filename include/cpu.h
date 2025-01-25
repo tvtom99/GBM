@@ -28,10 +28,11 @@
     REPRESENT THE SAME WAY I WOULD IMPLEMENT IT!
 ===================================================*/
 
-struct instruction {
-	char *disassembly;
-	unsigned char operandLength;
-	void *execute;
+struct instruction
+{
+    char *disassembly;
+    unsigned char operandLength;
+    void *execute;
 } extern const instructions[256];
 
 extern const unsigned char instructionTicks[256];
@@ -42,7 +43,7 @@ extern unsigned char stopped;
 void reset(void);
 void stepCPU(void);
 
-void undefined(void);   //The function that runs if an opcode isn't defined!
+void undefined(void); // The function that runs if an opcode isn't defined!
 
 void nop(void);
 void jp_nn(unsigned short operand);
@@ -61,3 +62,7 @@ void ld_de_nn(unsigned short value);
 void ldi_a_hlp(void);
 void ld_bc_nn(unsigned short value);
 void ld_bcp_a(void);
+void ld_a_n(unsigned char value);
+void ld_ff_n_ap(unsigned char value);
+void ld_ff_ap_n(unsigned char value);
+void cp_n(unsigned char value);

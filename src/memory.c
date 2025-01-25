@@ -12,6 +12,7 @@
 #include "../include/main.h"
 #include "../include/keys.h"
 #include "../include/interupts.h"
+#include "../include/gpu.h"
 #include <stdlib.h>
 
 // A variable that resets the IO to some necessary value when starting or reseting the system.
@@ -150,26 +151,29 @@ unsigned char readByte(unsigned short address)
     */
     if (address == 0xFF00)
     {
-        // Check if button interupt is flagged
-        if (!(io[0x00] & 0x20))
-        {
-            // return 1100 0000 | KEYS.KEYS1 | 0010 0000 = 1110 XXXX where X = KEYS.KEYS2 bits
-            return (unsigned char)(0xC0 | keys.keys1 | 0x10);
-        }
-        // Check if dpad input flagged
-        else if (!(io[0x00] & 0x10))
-        {
-            return (unsigned char)(0xc0 | keys.keys2 | 0x20);
-        }
-        // 0x30 = 0011 0000, i.e. if neither dpad and action button flags are set
-        else if (!(io[0x00] & 0x30))
-        {
-            return 0xFF; // If neither bits are set, return 1111 1111
-        }
-        else
-        {
-            return 0; // just incase?
-        }
+        // // Check if button interupt is flagged
+        // if (!(io[0x00] & 0x20))
+        // {
+        //     // return 1100 0000 | KEYS.KEYS1 | 0010 0000 = 1110 XXXX where X = KEYS.KEYS2 bits
+        //     return (unsigned char)(0xC0 | keys.keys1 | 0x10);
+        // }
+        // // Check if dpad input flagged
+        // else if (!(io[0x00] & 0x10))
+        // {
+        //     return (unsigned char)(0xc0 | keys.keys2 | 0x20);
+        // }
+        // // 0x30 = 0011 0000, i.e. if neither dpad and action button flags are set
+        // else if (!(io[0x00] & 0x30))
+        // {
+        //     return 0xFF; // If neither bits are set, return 1111 1111
+        // }
+        // else
+        // {
+        //     return 0; // just incase?
+        // }
+
+        //for now, just return '0xff' cause nothing should be pressed! 
+        return (unsigned char) 0xff;
     }
 
     /*
@@ -197,7 +201,17 @@ unsigned char readByte(unsigned short address)
 
     // TAKEN FROM CINOOP CAUSE DIV TIMER IS VERY INVOLVED TO EMULATE PROPERLY
     // Should return a div timer, but a random number works just as well for Tetris
-	if(address == 0xff04) return (unsigned char)rand();
+    if (address == 0xff04)
+        return (unsigned char)rand();
+
+    if (address == 0xff40)
+        return gpu.control;
+    if (address == 0xff42)
+        return gpu.scrollY;
+    if (address == 0xff43)
+        return gpu.scrollX;
+    if (address == 0xff44)
+        return gpu.scanline;
 
     // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     printf("ERROR: Attempted to read invalid memory address: %x.\n", address);
@@ -220,6 +234,11 @@ void writeByte(unsigned short address, unsigned char value)
     if (address >= 0x8000 && address <= 0x9FFF)
     {
         vram[address - 0x8000] = value;
+        if (address <= 0x97ff)
+        {
+            printf("Should run 'updateTile' here.\n");
+            // updateTile(address, value);
+        }
     }
 
     // Adress @ SRAM
@@ -247,6 +266,36 @@ void writeByte(unsigned short address, unsigned char value)
     }
 
     // Address @ IO
+    // Individuals
+    else if (address == 0xff40)
+        gpu.control = value;
+    else if (address == 0xff42)
+        gpu.scrollY = value;
+    else if (address == 0xff43)
+        gpu.scrollX = value;
+    else if (address == 0xff46)
+        copy(0xfe00, value << 8, 160); // OAM DMA
+
+    //Background and sprite palette
+    else if(address == 0xff47) { // write only
+		int i;
+		// for(i = 0; i < 4; i++) backgroundPalette[i] = palette[(value >> (i * 2)) & 3];
+        printf("Background palette being updated\n");
+    }
+	
+	else if(address == 0xff48) { // write only
+		int i;
+		// for(i = 0; i < 4; i++) spritePalette[0][i] = palette[(value >> (i * 2)) & 3];
+        printf("Sprite palette being updated\n");
+    }
+	
+	else if(address == 0xff49) { // write only
+		int i;
+		// for(i = 0; i < 4; i++) spritePalette[1][i] = palette[(value >> (i * 2)) & 3];
+        printf("Sprite palette being updated\n");
+    }
+
+    // Fallback
     else if (address >= 0xFF00 && address <= 0xFF7F)
     {
         io[address - 0xFF00] = value;
@@ -264,7 +313,7 @@ void writeByte(unsigned short address, unsigned char value)
         interrupt.flags = value;
     }
 
-    // Address @ Interrupt Enable 
+    // Address @ Interrupt Enable
     else if (address == 0xFFFF)
     {
         interrupt.enable = value;
@@ -273,7 +322,7 @@ void writeByte(unsigned short address, unsigned char value)
     // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     else
     {
-        printf("ERROR: Attempted to write invalid memory address: %x.\n", address);
+        printf("ERROR: Attempted to write invalid memory address: 0x%02x.\n", address);
         quit();
     }
 }
@@ -313,7 +362,7 @@ void writeShortToStack(unsigned short value)
     writeShort(registers.sp, value);
 
     // DEBUG
-    printf("Stack write 0x%04x\n", value);
+    // printf("Stack write 0x%04x\n", value);
 }
 
 /*
@@ -330,7 +379,15 @@ unsigned short readShortFromStack(void)
     registers.sp += 2;
 
     // DEBUG
-    printf("Stack read 0x%04x\n", value);
+    // printf("Stack read 0x%04x\n", value);
 
     return value;
+}
+
+// Copy function taken from Cinoop cause I'm getting annoyed that my emulator is looping and I don't have ths written already
+void copy(unsigned short destination, unsigned short source, size_t length)
+{
+    unsigned int i;
+    for (i = 0; i < length; i++)
+        writeByte(destination + i, readByte(source + i));
 }

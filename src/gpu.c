@@ -7,8 +7,6 @@ struct gpu gpu;
 
 void stepGPU(void)
 {
-    printf("Running GPU step!\n");
-
     enum gpuMode
     {
         GPU_MODE_HBLANK = 0,

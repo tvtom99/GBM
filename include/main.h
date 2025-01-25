@@ -8,3 +8,5 @@ extern char gameName[17];
 extern unsigned char debugModeEnable;
 
 void quit(void);
+void handlePress(const char *key);
+void handleUnpress(const char *key);

@@ -62,13 +62,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // Rom has loaded properly, open window and start CPU cycle
         SDL_Init(SDL_INIT_VIDEO);
 
-        char title[200];    // Buffer to hold window title
+        char title[200]; // Buffer to hold window title
 
         // Combine "GBM - " with gameName
         strcpy(title, "GBM - "); // Copy "GBM - " to title
         strcat(title, gameName); // Append gameName to title
 
-        //The window itself! Size defined by constants and scaling factor.
+        // The window itself! Size defined by constants and scaling factor.
         SDL_Window *window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_HEIGHT * SCALING_FACTOR, SCREEN_WIDTH * SCALING_FACTOR, SDL_WINDOW_SHOWN);
 
         SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -83,11 +83,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             interruptStep();
             while (SDL_PollEvent(&e))
             {
-                if (e.type == SDL_QUIT)
+                switch (e.type)
                 {
+                case SDL_QUIT:
                     quit = 1;
+                    break;
+                case SDL_KEYDOWN:
+                    handlePress(SDL_GetKeyName(e.key.keysym.sym));
+                    printf("Key Pressed: %s\n", SDL_GetKeyName(e.key.keysym.sym));
+                    break;
+
+                case SDL_KEYUP:
+                    handleUnpress(SDL_GetKeyName(e.key.keysym.sym));
+                    printf("Key Released: %s\n", SDL_GetKeyName(e.key.keysym.sym));
+                    break;
                 }
+                // if (e.type == SDL_QUIT)
+                // {
+                // quit = 1;
+                // }
             }
+
+            /*
+                This was just some testing, but it seems that inputs get noticed VERY quickly when checked in this way.
+            */
+            // const Uint8 *keyState = SDL_GetKeyboardState(NULL);
+            // if (keyState[SDL_SCANCODE_W])
+            // {
+            //     printf("W key is held down\n");
+            // }
+
             SDL_RenderClear(renderer);
             SDL_RenderPresent(renderer);
         }
@@ -98,6 +123,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     return 0;
+}
+
+void handlePress(const char *keyName)
+{
+    //TO-DO: IMPLEMENT INPUT HANDLING
+    if(!strcmp(keyName, "Space") && !debugModeEnable)
+    {
+        debugModeEnable = 1;
+    }
+    else
+    {
+        printf("Undefined keyboard press: %s\n", keyName);
+    }
+}
+
+void handleUnpress(const char *keyName)
+{
+    //TO-DO: IMPLEMENT INPUT HANDLING
 }
 
 void quit(void)

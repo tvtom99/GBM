@@ -13,16 +13,16 @@ struct interrupt interrupt;
 
 void interruptStep(void)
 {
-    printf("Running interupt step!\n");
+    // printf("Running interupt step!\n");
 
-    printf("interrupt master: 0x%.02x\ninterrupt enable: 0x%.02x\ninterrupt flags: 0x%.02x\n", interrupt.master, interrupt.enable, interrupt.flags);
-    printf("Keys currently: 0x%.04x\n", keys.c);
+    // printf("interrupt master: 0x%.02x\ninterrupt enable: 0x%.02x\ninterrupt flags: 0x%.02x\n", interrupt.master, interrupt.enable, interrupt.flags);
+    // printf("Keys currently: 0x%.04x\n", keys.c);
 
     // If the master & enable flags are set, and any spcific interupts are on...
     if (interrupt.master && interrupt.enable && interrupt.flags)
     {
         // Find and execute the correct interrupt.
-        printf("Running an interupt!");
+        // printf("Running an interupt!");
 
         //'activate' will have a positive bit for whichever flags are BOTH set AND enabled during this step
         unsigned char activate = (interrupt.enable & interrupt.flags);
