@@ -223,8 +223,12 @@ void writeByte(unsigned short address, unsigned char value)
     // CINOOP TETRIS PATCH so I can get past the copyright screen maybe?
     if (address == 0xFF80)
     {
-        printf("TETRIS PATCH");
-        quit();
+        printf("TETRIS PATCH\n");
+        printf("TETRIS PATCH\n");
+        printf("TETRIS PATCH\n");
+        printf("TETRIS PATCH\n");
+        printf("TETRIS PATCH\n");
+        // quit();
         return;
     }
 
@@ -323,7 +327,8 @@ void writeByte(unsigned short address, unsigned char value)
     else
     {
         printf("ERROR: Attempted to write invalid memory address: 0x%02x.\n", address);
-        quit();
+        printf("Generally I would quit here but I think I read that tetris does this sometimes for no reason...\n");
+        // quit();
     }
 }
 

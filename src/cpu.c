@@ -40,8 +40,8 @@ const struct instruction instructions[256] = {
 	{"LD (0x%04X), SP", 2, undefined},			// 0x08
 	{"ADD HL, BC", 0, undefined},				// 0x09
 	{"LD A, (BC)", 0, undefined},				// 0x0a
-	{"DEC BC", 0, undefined},					// 0x0b
-	{"INC C", 0, undefined},					// 0x0c
+	{"DEC BC", 0, dec_bc},						// 0x0b
+	{"INC C", 0, inc_c},						// 0x0c
 	{"DEC C", 0, dec_c},						// 0x0d
 	{"LD C, 0x%02X", 1, ld_c_n},				// 0x0e
 	{"RRCA", 0, undefined},						// 0x0f
@@ -78,12 +78,12 @@ const struct instruction instructions[256] = {
 	{"LD L, 0x%02X", 1, undefined},				// 0x2e
 	{"CPL", 0, undefined},						// 0x2f
 	{"JR NC, 0x%02X", 1, undefined},			// 0x30
-	{"LD SP, 0x%04X", 2, undefined},			// 0x31
+	{"LD SP, 0x%04X", 2, ld_sp_nn},				// 0x31
 	{"LDD (HL), A", 0, ldd_hlp_a},				// 0x32
 	{"INC SP", 0, undefined},					// 0x33
 	{"INC (HL)", 0, undefined},					// 0x34
 	{"DEC (HL)", 0, undefined},					// 0x35
-	{"LD (HL), 0x%02X", 1, undefined},			// 0x36
+	{"LD (HL), 0x%02X", 1, ld_hlp_n},			// 0x36
 	{"SCF", 0, undefined},						// 0x37
 	{"JR C, 0x%02X", 1, undefined},				// 0x38
 	{"ADD HL, SP", 0, undefined},				// 0x39
@@ -149,7 +149,7 @@ const struct instruction instructions[256] = {
 	{"LD (HL), L", 0, undefined},				// 0x75
 	{"HALT", 0, undefined},						// 0x76
 	{"LD (HL), A", 0, undefined},				// 0x77
-	{"LD A, B", 0, undefined},					// 0x78
+	{"LD A, B", 0, ld_a_b},						// 0x78
 	{"LD A, C", 0, undefined},					// 0x79
 	{"LD A, D", 0, undefined},					// 0x7a
 	{"LD A, E", 0, undefined},					// 0x7b
@@ -206,7 +206,7 @@ const struct instruction instructions[256] = {
 	{"XOR (HL)", 0, undefined},					// 0xae
 	{"XOR A", 0, xor_a},						// 0xaf
 	{"OR B", 0, undefined},						// 0xb0
-	{"OR C", 0, undefined},						// 0xb1
+	{"OR C", 0, or_c},							// 0xb1
 	{"OR D", 0, undefined},						// 0xb2
 	{"OR E", 0, undefined},						// 0xb3
 	{"OR H", 0, undefined},						// 0xb4
@@ -230,11 +230,11 @@ const struct instruction instructions[256] = {
 	{"ADD A, 0x%02X", 1, undefined},			// 0xc6
 	{"RST 0x00", 0, undefined},					// 0xc7
 	{"RET Z", 0, undefined},					// 0xc8
-	{"RET", 0, undefined},						// 0xc9
+	{"RET", 0, ret},							// 0xc9
 	{"JP Z, 0x%04X", 2, undefined},				// 0xca
 	{"CB %02X", 1, undefined},					// 0xcb
 	{"CALL Z, 0x%04X", 2, undefined},			// 0xcc
-	{"CALL 0x%04X", 2, undefined},				// 0xcd
+	{"CALL 0x%04X", 2, call_nn},				// 0xcd
 	{"ADC 0x%02X", 1, undefined},				// 0xce
 	{"RST 0x08", 0, undefined},					// 0xcf
 	{"RET NC", 0, undefined},					// 0xd0
@@ -255,7 +255,7 @@ const struct instruction instructions[256] = {
 	{"RST 0x18", 0, rst_18},					// 0xdf
 	{"LD (0xFF00 + 0x%02X), A", 1, ld_ff_n_ap}, // 0xe0
 	{"POP HL", 0, undefined},					// 0xe1
-	{"LD (0xFF00 + C), A", 0, undefined},		// 0xe2
+	{"LD (0xFF00 + C), A", 0, ld_ff_c_a},		// 0xe2
 	{"UNKNOWN", 0, undefined},					// 0xe3
 	{"UNKNOWN", 0, undefined},					// 0xe4
 	{"PUSH HL", 0, undefined},					// 0xe5
@@ -263,7 +263,7 @@ const struct instruction instructions[256] = {
 	{"RST 0x20", 0, undefined},					// 0xe7
 	{"ADD SP,0x%02X", 1, undefined},			// 0xe8
 	{"JP HL", 0, undefined},					// 0xe9
-	{"LD (0x%04X), A", 2, undefined},			// 0xea
+	{"LD (0x%04X), A", 2, ld_nnp_a},			// 0xea
 	{"UNKNOWN", 0, undefined},					// 0xeb
 	{"UNKNOWN", 0, undefined},					// 0xec
 	{"UNKNOWN", 0, undefined},					// 0xed
@@ -283,7 +283,7 @@ const struct instruction instructions[256] = {
 	{"EI", 0, undefined},						// 0xfb
 	{"UNKNOWN", 0, undefined},					// 0xfc
 	{"UNKNOWN", 0, undefined},					// 0xfd
-	{"CP 0x%02X", 1, cp_n},				// 0xfe
+	{"CP 0x%02X", 1, cp_n},						// 0xfe
 	{"RST 0x38", 0, undefined},					// 0xff
 };
 
@@ -617,8 +617,8 @@ void dec_b(void)
 
 	if (registers.b == 0)
 	{
-		printf("Zero flag has been set!\n");
-		printf("B: 0x%02x\n", registers.b);
+		// printf("Zero flag has been set!\n");
+		// printf("B: 0x%02x\n", registers.b);
 		FLAGS_SET(FLAGS_ZERO);
 	}
 	else
@@ -639,6 +639,53 @@ void dec_b(void)
 void ld_b_n(unsigned char value)
 {
 	registers.b = value;
+}
+
+/*
+	DEC BC - 0x0B
+	---
+	Decrease the value of the 16-bit register BC by 1.
+	Don't need to check flags (apparently?).
+*/
+void dec_bc(void)
+{
+	registers.bc--;
+}
+
+/*
+	INC C - 0x0C
+	---
+	Increment C by 1.
+	Clear negative flag.
+	Set half-carry & zero flag if necessary.
+*/
+void inc_c(void)
+{
+	// Check if all bits of lower byte are 1, which would cause a half carry.
+	if (registers.c & 0x0f == 0x0f)
+	{
+		FLAGS_SET(FLAGS_HALFCARRY);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_HALFCARRY);
+	}
+
+	// Increment C
+	registers.c++;
+
+	// Check if value is now 0.
+	if (registers.c == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	// Always clear negative flag as this is an addition.
+	FLAGS_CLEAR(FLAGS_NEGATIVE);
 }
 
 /*
@@ -741,6 +788,16 @@ void ldi_a_hlp(void)
 }
 
 /*
+	LD SP NN - 0x31
+	---
+	Load 16-bit value NN into 16-bit register SP.
+*/
+void ld_sp_nn(unsigned short value)
+{
+	registers.sp = value;
+}
+
+/*
 	LDD HL- A - 0x32
 	---
 	Load data from the 8-bit A register to the absolute address specified by the 16-bit register HL.
@@ -750,6 +807,16 @@ void ldd_hlp_a(void)
 {
 	writeByte(registers.hl, registers.a);
 	registers.hl--;
+}
+
+/*
+	LD HL N - 0x36
+	---
+	Load the 8-bit data N into the memory address speicfied by the 16-bit register HL.
+*/
+void ld_hlp_n(unsigned char value)
+{
+	writeByte(registers.hl, value);
 }
 
 /*
@@ -773,6 +840,21 @@ void ld_b_a(void)
 }
 
 /*
+	0x7X
+	INSTRUCTIONS
+*/
+
+/*
+	LD A B 0x78
+	---
+	Load the the value of 8-bit register B into the 8-bit register A.
+*/
+void ld_a_b(void)
+{
+	registers.a = registers.b;
+}
+
+/*
 	XOR A - 0xAF
 	---
 	Calculates the result of an exclusive-or between the contents of register A
@@ -793,6 +875,40 @@ void xor_a(void)
 }
 
 /*
+	0xBX
+	INSTRUCTIONS
+*/
+
+/*
+	OR C - 0xB1
+	---
+	Perform a bitwise OR opperation between 8-bit registers A and C.
+	Store the results in 8-bit register A.
+	Check zero flag & clear all other flags
+*/
+void or_c(void)
+{
+	registers.a = (registers.a | registers.c);
+
+	// Check flags
+	FLAGS_CLEAR(FLAGS_HALFCARRY | FLAGS_CARRY | FLAGS_NEGATIVE);
+
+	if (registers.a == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+}
+
+/*
+	0xCX
+	INSTRUCTIONS
+*/
+
+/*
 	JP NN - 0xC3
 	---
 	Jumps to the point in code specified by the opperand.
@@ -801,6 +917,29 @@ void jp_nn(unsigned short operand)
 {
 	// printf("Jumping to 0x%.4x\n", operand);
 	registers.pc = operand;
+}
+
+/*
+	RET - 0xC9
+	---
+	Generally used to return from a function.
+	Read the last short value on the stack and assign it to the register.pc variable (program counter);
+*/
+void ret(void)
+{
+	registers.pc = readShortFromStack();
+}
+
+/*
+	CALL NN - 0xCD
+	---
+	Set registers.pc (program counter) to 16-bit value NN.
+	Store the original pc value on the stack before updating to new one!
+*/
+void call_nn(unsigned short value)
+{
+	writeShortToStack(registers.pc);
+	registers.pc = value;
 }
 
 /*
@@ -828,6 +967,27 @@ void rst_18(void)
 void ld_ff_n_ap(unsigned char value)
 {
 	writeByte((0xFF00 + value), registers.a);
+}
+
+/*
+	LD FF C A - 0xE2
+	---
+	Load the data from the 8-bit register A into the memory location specified by 0xFF00 plus the 8-bit
+	register C.
+*/
+void ld_ff_c_a(void)
+{
+	writeByte(0xFF + registers.c, registers.a);
+}
+
+/*
+	LD NNP A - 0xEA
+	---
+	Load the data in the 8-bit register A to the memory location specified by NN.
+*/
+void ld_nnp_a(unsigned short value)
+{
+	writeByte(value, registers.a);
 }
 
 /*
