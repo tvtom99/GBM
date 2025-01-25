@@ -455,6 +455,12 @@ void stepCPU()
 		return;
 	}
 
+	//BREAKPOINT DEBUG
+	if(registers.pc == 0x21D)
+	{
+		debugModeEnable = 1;
+	}
+
 	// Debug stuff
 	if (debugModeEnable)
 	{
@@ -560,6 +566,13 @@ void undefined(void)
 	------
 	Helpers for the instructions.
 ============================================*/
+
+/*
+	dec
+	---
+	When given a value, it will return that value MINUS 1.
+	Will set all relevant flags at the same time.
+*/
 static unsigned char dec(unsigned char value)
 {
 	// Check for half carry
@@ -591,6 +604,124 @@ static unsigned char dec(unsigned char value)
 	return value;
 }
 
+/*
+	inc
+	---
+	Increment the given value by 1, performing all flag checks.
+*/
+static unsigned char inc(unsigned char value)
+{
+	// Check if all bits of lower byte are 1, which would cause a half carry.
+	if ((value & 0x0f) == 0x0f)
+	{
+		FLAGS_SET(FLAGS_HALFCARRY);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_HALFCARRY);
+	}
+
+	// Increment C
+	value++;
+
+	// Check if value is now 0.
+	if (value == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	// Always clear negative flag as this is an addition.
+	FLAGS_CLEAR(FLAGS_NEGATIVE);
+
+	return value;
+}
+
+/*
+	and
+	---
+	Perform a bitwise AND function between the given value
+	and register A.
+	Will handle all flag setting at the same time.
+*/
+
+static void and (unsigned char value)
+{
+	registers.a &= value;
+
+	// Check zero flag
+	if (registers.a == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	// Clear carry & negative flags
+	FLAGS_CLEAR(FLAGS_CARRY | FLAGS_NEGATIVE);
+
+	// Set half-carry flag (as defined in OPCODE manual)
+	FLAGS_SET(FLAGS_HALFCARRY);
+}
+
+/*
+	xor
+	---
+	Perform a bitwise XOR function between register A and the given
+	value.
+*/
+static void xor (unsigned char value) {
+	registers.a ^= value;
+
+	if (registers.a == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	FLAGS_CLEAR(FLAGS_CARRY | FLAGS_NEGATIVE | FLAGS_HALFCARRY);
+}
+
+/*
+	or
+	---
+	Performs a bitwise OR function between register A and the given
+	value.
+*/
+static void or(unsigned char value)
+{
+	registers.a |= value;
+
+	if (registers.a == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	FLAGS_CLEAR(FLAGS_CARRY | FLAGS_NEGATIVE | FLAGS_HALFCARRY);
+}
+
+/*
+	cp
+	---
+
+*/
+static void cp(unsigned char value)
+{
+
+}
+
 /*===========================================
 	INSTRUCTIONS
 	------
@@ -598,11 +729,18 @@ static unsigned char dec(unsigned char value)
 ============================================*/
 
 /*
+	0x0X
+	INSTRUCTIONS
+*/
+
+/*
 	NOP - 0x00
 	---
 	Does nothing. Skips the cycle.
 */
-void nop(void) {}
+void nop(void)
+{
+}
 
 /*
 	LD BC NN - 0x01
@@ -637,34 +775,7 @@ void ld_bcp_a(void)
 */
 void dec_b(void)
 {
-	// printRegisters();
-
-	// Set half carry flag if subtraction will cause rollover.
-	if ((registers.b & 0x0f) == 0x00)
-	{
-		FLAGS_SET(FLAGS_HALFCARRY);
-	}
-	else // Clear it just incase.
-	{
-		FLAGS_CLEAR(FLAGS_HALFCARRY);
-	}
-
-	registers.b--;
-
-	if (registers.b == 0)
-	{
-		// printf("Zero flag has been set!\n");
-		// printf("B: 0x%02x\n", registers.b);
-		FLAGS_SET(FLAGS_ZERO);
-	}
-	else
-	{
-		// printf("Clearing zero flag.\n");
-		// printf("B: 0x%02x\n", registers.b);
-		FLAGS_CLEAR(FLAGS_ZERO);
-	}
-
-	FLAGS_SET(FLAGS_NEGATIVE);
+	registers.b = dec(registers.b);
 }
 
 /*
@@ -697,31 +808,7 @@ void dec_bc(void)
 */
 void inc_c(void)
 {
-	// Check if all bits of lower byte are 1, which would cause a half carry.
-	if ((registers.c & 0x0f) == 0x0f)
-	{
-		FLAGS_SET(FLAGS_HALFCARRY);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_HALFCARRY);
-	}
-
-	// Increment C
-	registers.c++;
-
-	// Check if value is now 0.
-	if (registers.c == 0)
-	{
-		FLAGS_SET(FLAGS_ZERO);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_ZERO);
-	}
-
-	// Always clear negative flag as this is an addition.
-	FLAGS_CLEAR(FLAGS_NEGATIVE);
+	registers.c = inc(registers.c);
 }
 
 /*
@@ -736,28 +823,7 @@ void inc_c(void)
 */
 void dec_c(void)
 {
-	// Set half carry flag if subtraction will cause rollover.
-	if ((registers.c & 0x0f) == 0x00)
-	{
-		FLAGS_SET(FLAGS_HALFCARRY);
-	}
-	else // Clear it just incase.
-	{
-		FLAGS_CLEAR(FLAGS_HALFCARRY);
-	}
-
-	registers.c--;
-
-	if (registers.c == 0)
-	{
-		FLAGS_SET(FLAGS_ZERO);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_ZERO);
-	}
-
-	FLAGS_SET(FLAGS_NEGATIVE);
+	registers.c = dec(registers.c);
 }
 
 /*
@@ -781,10 +847,15 @@ void ld_de_nn(unsigned short value)
 }
 
 /*
+	0x2X
+	INSTRUCTIONS
+*/
+
+/*
 	JR NZ N - 0x20
 	---
-	If ZERO FLAG is not set, add N to current PC.
-	Effectively, jump forward by N if ZERO FLAG is set.
+	If ZERO FLAG is NOT set, add N to current PC.
+	Effectively, jump forward or back by N if ZERO FLAG is NOT set.
 */
 void jr_nz_n(unsigned char value)
 {
@@ -866,6 +937,11 @@ void ld_a_n(unsigned char value)
 }
 
 /*
+	0x4X
+	INSTRUCTIONS
+*/
+
+/*
 	LD B A - 0x47
 	---
 	Load the data from the 8-bit register A into the 8-bit register B.
@@ -902,7 +978,7 @@ void ld_a_b(void)
 */
 void and_e(void)
 {
-	registers.a &= registers.e;
+	and(registers.e);
 }
 
 /*
@@ -915,14 +991,7 @@ void and_e(void)
 */
 void xor_a(void)
 {
-	// Do an exclusive or between register A and itself.
-	registers.a ^= registers.a;
-
-	// Because this always results in a 0, set the zero flag in the flag register
-	FLAGS_SET(FLAGS_ZERO);
-
-	// Incase these are still set, clear them too
-	FLAGS_CLEAR(FLAGS_CARRY | FLAGS_NEGATIVE | FLAGS_HALFCARRY);
+	xor(registers.a);
 }
 
 /*
@@ -939,19 +1008,7 @@ void xor_a(void)
 */
 void or_c(void)
 {
-	registers.a = (registers.a | registers.c);
-
-	// Check flags
-	FLAGS_CLEAR(FLAGS_HALFCARRY | FLAGS_CARRY | FLAGS_NEGATIVE);
-
-	if (registers.a == 0)
-	{
-		FLAGS_SET(FLAGS_ZERO);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_ZERO);
-	}
+	or(registers.c);
 }
 
 /*
@@ -1075,40 +1132,50 @@ void di(void)
 */
 void cp_n(unsigned char value)
 {
-	unsigned char result = registers.a - value;
+	// unsigned char result = registers.a - value;
 
-	// Is a subtraction so always set negative flag
+	// // Is a subtraction so always set negative flag
+	// FLAGS_SET(FLAGS_NEGATIVE);
+
+	// // Set zero if result would be zero
+	// if (result == 0)
+	// {
+	// 	FLAGS_SET(FLAGS_ZERO);
+	// }
+	// else
+	// {
+	// 	FLAGS_CLEAR(FLAGS_ZERO);
+	// }
+
+	// // If the value is larger than what's at register A, set carry flag
+	// if (value > registers.a)
+	// {
+	// 	FLAGS_SET(FLAGS_CARRY);
+	// }
+	// else
+	// {
+	// 	FLAGS_CLEAR(FLAGS_CARRY);
+	// }
+
+	// // Same as above but just for the least sig bits
+	// if ((value & 0x0f) > (registers.a & 0x0f))
+	// {
+	// 	FLAGS_SET(FLAGS_HALFCARRY);
+	// }
+	// else
+	// {
+	// 	FLAGS_CLEAR(FLAGS_HALFCARRY);
+	// }
 	FLAGS_SET(FLAGS_NEGATIVE);
-
-	// Set zero if result would be zero
-	if (result == 0)
-	{
-		FLAGS_SET(FLAGS_ZERO);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_ZERO);
-	}
-
-	// If the value is larger than what's at register A, set carry flag
-	if (value > registers.a)
-	{
-		FLAGS_SET(FLAGS_CARRY);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_CARRY);
-	}
-
-	// Same as above but just for the least sig bits
-	if ((value & 0x0f) > (registers.a & 0x0f))
-	{
-		FLAGS_SET(FLAGS_HALFCARRY);
-	}
-	else
-	{
-		FLAGS_CLEAR(FLAGS_HALFCARRY);
-	}
+	
+	if(registers.a == value) FLAGS_SET(FLAGS_ZERO);
+	else FLAGS_CLEAR(FLAGS_ZERO);
+	
+	if(value > registers.a) FLAGS_SET(FLAGS_CARRY);
+	else FLAGS_CLEAR(FLAGS_CARRY);
+	
+	if((value & 0x0f) > (registers.a & 0x0f)) FLAGS_SET(FLAGS_HALFCARRY);
+	else FLAGS_CLEAR(FLAGS_HALFCARRY);
 }
 
 /*

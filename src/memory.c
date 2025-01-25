@@ -221,16 +221,16 @@ unsigned char readByte(unsigned short address)
 void writeByte(unsigned short address, unsigned char value)
 {
     // CINOOP TETRIS PATCH so I can get past the copyright screen maybe?
-    if (address == 0xFF80)
-    {
-        printf("TETRIS PATCH\n");
-        printf("TETRIS PATCH\n");
-        printf("TETRIS PATCH\n");
-        printf("TETRIS PATCH\n");
-        printf("TETRIS PATCH\n");
-        // quit();
-        return;
-    }
+    // if (address == 0xFF80)
+    // {
+    //     printf("TETRIS PATCH\n");
+    //     printf("TETRIS PATCH\n");
+    //     printf("TETRIS PATCH\n");
+    //     printf("TETRIS PATCH\n");
+    //     printf("TETRIS PATCH\n");
+    //     // quit();
+    //     return;
+    // }
 
     // Comments have been abreviated in this function. Please see 'readByte' to understand more of what's happening.
 
@@ -299,6 +299,12 @@ void writeByte(unsigned short address, unsigned char value)
         printf("Sprite palette being updated\n");
     }
 
+    // Address @ Interrupt Flags
+    else if (address == 0xFF0F)
+    {
+        interrupt.flags = value;
+    }
+    
     // Fallback
     else if (address >= 0xFF00 && address <= 0xFF7F)
     {
@@ -311,11 +317,6 @@ void writeByte(unsigned short address, unsigned char value)
         hram[address - 0xFF80] = value;
     }
 
-    // Address @ Interrupt Flags
-    else if (address == 0xFF0F)
-    {
-        interrupt.flags = value;
-    }
 
     // Address @ Interrupt Enable
     else if (address == 0xFFFF)

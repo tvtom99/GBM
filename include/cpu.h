@@ -78,3 +78,8 @@ void or_c(void);
 void ret(void);
 void and_e(void);
 void rst_38(void);
+static unsigned char dec(unsigned char value);
+static unsigned char inc(unsigned char value);
+static void and(unsigned char value);
+static void xor(unsigned char value);
+static void or (unsigned char value);
