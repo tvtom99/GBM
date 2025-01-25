@@ -122,6 +122,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         SDL_Quit();
     }
 
+    quit();
     return 0;
 }
 

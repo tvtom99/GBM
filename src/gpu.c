@@ -1,9 +1,12 @@
 #include "../include/gpu.h"
 #include "../include/cpu.h"
 #include "../include/interupts.h"
+#include "../include/main.h"
 #include <stdio.h>
 
 struct gpu gpu;
+
+unsigned char tiles[384][8][8];
 
 void stepGPU(void)
 {
@@ -77,7 +80,7 @@ void stepGPU(void)
         {
             gpuMode = GPU_MODE_HBLANK;
 
-            printf("renderScanline() would be called here\n");
+            // printf("renderScanline() would be called here\n");
             // renderScanline();
 
             gpu.tick -= 172;
@@ -90,4 +93,10 @@ void stepGPU(void)
 void hblank(void)
 {
     gpu.scanline++;
+
+    // if (gpu.scanline == 0x3D)
+    // {
+    //     printf("scanline is where it should be at the end of the loops\n");
+    //     debugModeEnable = 1;
+    // }
 }

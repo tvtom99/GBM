@@ -22,7 +22,7 @@ void interruptStep(void)
     if (interrupt.master && interrupt.enable && interrupt.flags)
     {
         // Find and execute the correct interrupt.
-        // printf("Running an interupt!");
+        printf("Running an interupt!");
 
         //'activate' will have a positive bit for whichever flags are BOTH set AND enabled during this step
         unsigned char activate = (interrupt.enable & interrupt.flags);

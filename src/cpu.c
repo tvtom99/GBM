@@ -340,10 +340,6 @@ void reset(void)
 	registers.de = 0x00D8;
 	registers.hl = 0x014D;
 
-	// Initialise the stack pointer & program counter.
-	registers.sp = 0xfffe;
-	registers.pc = 0x100;
-
 	// Initialise the interrupts
 	interrupt.master = 1;
 	interrupt.enable = 0;
@@ -456,10 +452,15 @@ void stepCPU()
 	}
 
 	//BREAKPOINT DEBUG
-	if(registers.pc == 0x21D)
+	if(registers.pc == 0x21B)
 	{
 		debugModeEnable = 1;
 	}
+	// if(gpu.scanline >= 0x90)
+	// {
+	// 	printf("gpu.scanline >= 0x90 == 144\n");
+	// 	debugModeEnable = 1;
+	// }
 
 	// Debug stuff
 	if (debugModeEnable)

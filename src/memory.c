@@ -172,8 +172,8 @@ unsigned char readByte(unsigned short address)
         //     return 0; // just incase?
         // }
 
-        //for now, just return '0xff' cause nothing should be pressed! 
-        return (unsigned char) 0xff;
+        // for now, just return '0xff' cause nothing should be pressed!
+        return (unsigned char)0xff;
     }
 
     /*
@@ -211,7 +211,8 @@ unsigned char readByte(unsigned short address)
     if (address == 0xff43)
         return gpu.scrollX;
     if (address == 0xff44)
-        return gpu.scanline;
+        return 0x90; // default to 0x90 until I got GPU working    
+        // return gpu.scanline; // Read only. There is no equivalent in 'writeByte'.
 
     // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     printf("ERROR: Attempted to read invalid memory address: %x.\n", address);
@@ -280,22 +281,25 @@ void writeByte(unsigned short address, unsigned char value)
     else if (address == 0xff46)
         copy(0xfe00, value << 8, 160); // OAM DMA
 
-    //Background and sprite palette
-    else if(address == 0xff47) { // write only
-		int i;
-		// for(i = 0; i < 4; i++) backgroundPalette[i] = palette[(value >> (i * 2)) & 3];
+    // Background and sprite palette
+    else if (address == 0xff47)
+    { // write only
+        int i;
+        // for(i = 0; i < 4; i++) backgroundPalette[i] = palette[(value >> (i * 2)) & 3];
         printf("Background palette being updated\n");
     }
-	
-	else if(address == 0xff48) { // write only
-		int i;
-		// for(i = 0; i < 4; i++) spritePalette[0][i] = palette[(value >> (i * 2)) & 3];
+
+    else if (address == 0xff48)
+    { // write only
+        int i;
+        // for(i = 0; i < 4; i++) spritePalette[0][i] = palette[(value >> (i * 2)) & 3];
         printf("Sprite palette being updated\n");
     }
-	
-	else if(address == 0xff49) { // write only
-		int i;
-		// for(i = 0; i < 4; i++) spritePalette[1][i] = palette[(value >> (i * 2)) & 3];
+
+    else if (address == 0xff49)
+    { // write only
+        int i;
+        // for(i = 0; i < 4; i++) spritePalette[1][i] = palette[(value >> (i * 2)) & 3];
         printf("Sprite palette being updated\n");
     }
 
@@ -317,7 +321,6 @@ void writeByte(unsigned short address, unsigned char value)
     {
         hram[address - 0xFF80] = value;
     }
-
 
     // Address @ Interrupt Enable
     else if (address == 0xFFFF)
