@@ -6,6 +6,7 @@
 #include "../include/memory.h"
 #include "../include/interupts.h"
 #include "../include/keys.h"
+#include "../include/gpu.h"
 
 // code taken from Cinoop for debug purposes
 void printRegisters(void)
@@ -51,8 +52,6 @@ void showRealtimeData(void)
 	// Construct the debug message (I had my own code here but I wrote it with strcat and a temp
 	// string val so I just copied Cinoop's code cause it works better and quicker than re-writing
 	// mine)
-	debugMessageP += sprintf(debugMessageP, "PC: 0x%02x\n", registers.pc);	// <-- THIS IS MY CODE THO :D
-	debugMessageP += sprintf(debugMessageP, "SP: 0x%02x\n", registers.sp);	// <-- THIS IS MY CODE THO :D
 
 	debugMessageP += sprintf(debugMessageP, "\nRegisters:\n");
 	debugMessageP += sprintf(debugMessageP, "AF: 0x%04x\n", registers.af);
@@ -69,6 +68,11 @@ void showRealtimeData(void)
 	debugMessageP += sprintf(debugMessageP, "\nKEYS: 0x%02x\n", keys.c);
 	debugMessageP += sprintf(debugMessageP, "\nKEYS MEM: 0x%02x\n", readByte(0xFF00));
 
+	debugMessageP += sprintf(debugMessageP, "\nGPU control (0xFF40): 0x%02x\n", gpu.control);
+	debugMessageP += sprintf(debugMessageP, "GPU scrollX (0xFF43): 0x%02x\n", gpu.scrollX);
+	debugMessageP += sprintf(debugMessageP, "GPU scrollY (0xFF42): 0x%02x\n", gpu.scrollY);
+	debugMessageP += sprintf(debugMessageP, "GPU Scanline (0xFF44): 0x%02x\n", gpu.scanline);
+	debugMessageP += sprintf(debugMessageP, "GPU tick: 0x%02x\n", gpu.tick);
 
 	debugMessageP += sprintf(debugMessageP, "\nContinue debugging?\n");
 

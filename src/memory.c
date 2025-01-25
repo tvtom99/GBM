@@ -303,8 +303,9 @@ void writeByte(unsigned short address, unsigned char value)
     else if (address == 0xFF0F)
     {
         interrupt.flags = value;
+        io[address - 0xFF00] = value;
     }
-    
+
     // Fallback
     else if (address >= 0xFF00 && address <= 0xFF7F)
     {
