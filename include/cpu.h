@@ -76,3 +76,5 @@ void dec_bc(void);
 void ld_a_b(void);
 void or_c(void);
 void ret(void);
+void and_e(void);
+void rst_38(void);

@@ -192,7 +192,7 @@ const struct instruction instructions[256] = {
 	{"AND B", 0, undefined},					// 0xa0
 	{"AND C", 0, undefined},					// 0xa1
 	{"AND D", 0, undefined},					// 0xa2
-	{"AND E", 0, undefined},					// 0xa3
+	{"AND E", 0, and_e},						// 0xa3
 	{"AND H", 0, undefined},					// 0xa4
 	{"AND L", 0, undefined},					// 0xa5
 	{"AND (HL)", 0, undefined},					// 0xa6
@@ -284,7 +284,7 @@ const struct instruction instructions[256] = {
 	{"UNKNOWN", 0, undefined},					// 0xfc
 	{"UNKNOWN", 0, undefined},					// 0xfd
 	{"CP 0x%02X", 1, cp_n},						// 0xfe
-	{"RST 0x38", 0, undefined},					// 0xff
+	{"RST 0x38", 0, rst_38},					// 0xff
 };
 
 // This is a database of how many ticks each instruction should take.
@@ -556,6 +556,42 @@ void undefined(void)
 }
 
 /*===========================================
+	INSTRUCTIONS HELPERS
+	------
+	Helpers for the instructions.
+============================================*/
+static unsigned char dec(unsigned char value)
+{
+	// Check for half carry
+	if ((value & 0x0f) != 0)
+	{
+		FLAGS_CLEAR(FLAGS_HALFCARRY);
+	}
+	else
+	{
+		FLAGS_SET(FLAGS_HALFCARRY);
+	}
+
+	// Decrement value
+	value--;
+
+	// Check for zero
+	if (value == 0)
+	{
+		FLAGS_SET(FLAGS_ZERO);
+	}
+	else
+	{
+		FLAGS_CLEAR(FLAGS_ZERO);
+	}
+
+	// Set negative
+	FLAGS_SET(FLAGS_NEGATIVE);
+
+	return value;
+}
+
+/*===========================================
 	INSTRUCTIONS
 	------
 	All instructions that can be executed.
@@ -662,7 +698,7 @@ void dec_bc(void)
 void inc_c(void)
 {
 	// Check if all bits of lower byte are 1, which would cause a half carry.
-	if (registers.c & 0x0f == 0x0f)
+	if ((registers.c & 0x0f) == 0x0f)
 	{
 		FLAGS_SET(FLAGS_HALFCARRY);
 	}
@@ -855,6 +891,21 @@ void ld_a_b(void)
 }
 
 /*
+	0xAX
+	INSTRUCTIONS
+*/
+
+/*
+	AND E - 0xA3
+	---
+	Perform bitwise AND between 8-bit registers A and E, storing the results in 8-bit register A.
+*/
+void and_e(void)
+{
+	registers.a &= registers.e;
+}
+
+/*
 	XOR A - 0xAF
 	---
 	Calculates the result of an exclusive-or between the contents of register A
@@ -991,6 +1042,11 @@ void ld_nnp_a(unsigned short value)
 }
 
 /*
+	0xFX
+	INSTRUCTIONS
+*/
+
+/*
 	LD FF AP N - 0xF0
 	---
 	Load to the 8-bit register A the value stored at the 16-bit memory location defined as
@@ -1053,4 +1109,20 @@ void cp_n(unsigned char value)
 	{
 		FLAGS_CLEAR(FLAGS_HALFCARRY);
 	}
+}
+
+/*
+	RST 38 - 0xFF
+	---
+	Restart / implied call function.
+
+	Unconditional function call to the absolute fixed address defined by the opcode (0x0038).
+	Will store the current PC on the stack before setting the PC to 0x0038.
+	This is so that it can be returned to later if neccesary.
+*/
+
+void rst_38(void)
+{
+	writeShortToStack(registers.pc);
+	registers.pc = 0x0038;
 }
