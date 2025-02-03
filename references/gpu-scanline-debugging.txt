@@ -1,0 +1,29 @@
+All files that ALTER gpu.scanline;
+
+display.c: refers and calls it, but doesn't change it at any point
+
+gpu.c:
+	line 60: gpu.scanline++
+	line 63: gpu.scanline = 0
+
+	line 97: gpu.scanline++
+		^^^called during hblank() function
+
+memory.c: only calls it as a return value for when address == 0xff44
+
+
+All files that CALL hblank();
+
+gpu.c:
+	line 43: hblank();
+
+gpu.scanline is used identically to Cinoop. Therefore, the difference must be in how the sections that alter the scanline are called. These sections are all within the GPU.c function stepGPU.
+
+stepGPU is called EVERY frame. Each frame, gpu.tick is updated with the difference between the current tick value and the tick value last frame. Then, depending on the GPU state/mode & the ticks, it may call hblank or vblank.
+
+From testing, the gpu modes seem to be switching correctly. So it must be something to do with the ticks?
+
+IVE JUST WORKED OUT THAT MY TICK COUNT IS OFF BY 3 EVERY LOOP AFTER 0x214 -> 0x215 -> 0x216.
+SOMETHING MUST BE GOING ON HERE!
+
+From what I can see, I am 30% behind what I should be by the time I hit 0x219. no$gba has 0xff44 at 0x0D, while mine is at 0x0A.

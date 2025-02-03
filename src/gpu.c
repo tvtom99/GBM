@@ -33,9 +33,10 @@ void stepGPU(void)
     case GPU_MODE_HBLANK:
         if (gpu.tick >= 204)
         {
+            printf("hblank. gpu.tick: %x \n", gpu.tick);
             hblank();
 
-            if (gpu.scanline == 143)
+            if (gpu.scanline == 144)
             {
                 if (interrupt.enable & INTERRUPTS_VBLANK)
                     interrupt.flags |= INTERRUPTS_VBLANK;
@@ -46,12 +47,15 @@ void stepGPU(void)
             else
                 gpuMode = GPU_MODE_OAM;
 
+            printf("-204 gpu.tick \n");
             gpu.tick -= 204;
         }
         break;
     case GPU_MODE_VBLANK:
+
         if (gpu.tick >= 456)
         {
+            printf("vblank! gpu.tick: %x \n", gpu.tick);
             gpu.scanline++;
 
             if (gpu.scanline > 153)
@@ -60,6 +64,7 @@ void stepGPU(void)
                 gpuMode = GPU_MODE_OAM;
             }
 
+            printf("-456 gpu.tick \n");
             gpu.tick -= 456;
         }
 
@@ -68,8 +73,11 @@ void stepGPU(void)
     case GPU_MODE_OAM:
         if (gpu.tick >= 80)
         {
+            printf("oam! gpu.tick: %x \n", gpu.tick);
+
             gpuMode = GPU_MODE_VRAM;
 
+            printf("-80 gpu.tick \n");
             gpu.tick -= 80;
         }
 
@@ -78,11 +86,14 @@ void stepGPU(void)
     case GPU_MODE_VRAM:
         if (gpu.tick >= 172)
         {
+            printf("vram! gpu.tick: %x \n", gpu.tick);
+
             gpuMode = GPU_MODE_HBLANK;
 
             // printf("renderScanline() would be called here\n");
             // renderScanline();
 
+            printf("-172 gpu.tick \n");
             gpu.tick -= 172;
         }
 
@@ -93,10 +104,4 @@ void stepGPU(void)
 void hblank(void)
 {
     gpu.scanline++;
-
-    // if (gpu.scanline == 0x3D)
-    // {
-    //     printf("scanline is where it should be at the end of the loops\n");
-    //     debugModeEnable = 1;
-    // }
 }

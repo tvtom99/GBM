@@ -452,15 +452,10 @@ void stepCPU()
 	}
 
 	//BREAKPOINT DEBUG
-	if(registers.pc == 0x21B)
+	if(registers.pc == 0x21B || registers.pc == 0x219)
 	{
 		debugModeEnable = 1;
 	}
-	// if(gpu.scanline >= 0x90)
-	// {
-	// 	printf("gpu.scanline >= 0x90 == 144\n");
-	// 	debugModeEnable = 1;
-	// }
 
 	// Debug stuff
 	if (debugModeEnable)

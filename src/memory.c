@@ -211,8 +211,8 @@ unsigned char readByte(unsigned short address)
     if (address == 0xff43)
         return gpu.scrollX;
     if (address == 0xff44)
-        return 0x90; // default to 0x90 until I got GPU working    
-        // return gpu.scanline; // Read only. There is no equivalent in 'writeByte'.
+        // return 0x90; // default to 0x90 until I got GPU working    
+        return gpu.scanline; // Read only. There is no equivalent in 'writeByte'.
 
     // Shouldn't get here! Attempting to read a memory address outside of valid ranges.
     printf("ERROR: Attempted to read invalid memory address: %x.\n", address);

@@ -74,6 +74,10 @@ void showRealtimeData(void)
 	debugMessageP += sprintf(debugMessageP, "GPU Scanline (0xFF44): 0x%02x\n", gpu.scanline);
 	debugMessageP += sprintf(debugMessageP, "GPU tick: 0x%02x\n", gpu.tick);
 
+	debugMessageP += sprintf(debugMessageP, "\n0xFF41: 0x%02x\n", readByte(0xFF41));
+
+	debugMessageP += sprintf(debugMessageP, "\nTicks: 0x%02x\n", ticks);
+
 	debugMessageP += sprintf(debugMessageP, "\nContinue debugging?\n");
 
 	SDL_MessageBoxButtonData buttons[] = {
